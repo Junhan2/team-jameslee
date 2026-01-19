@@ -1,0 +1,14 @@
+{
+  "name": "prompt-template-analyzer",
+  "description": "Analyze past prompts to discover patterns and create reusable AskUserQuestion-based interactive templates",
+  "owner": {
+    "name": "Lee Junhan",
+    "email": "junhanlee91@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "prompt-template-analyzer",
+      "source": "./"
+    }
+  ]
+}
