@@ -1,0 +1,21 @@
+{
+  "name": "react-best-practices-review",
+  "version": "1.0.0",
+  "description": "Vercel React Best Practices 기반 코드 리뷰 자동화 - 성능 이슈 탐지, 신뢰도 기반 필터링, PR 댓글 자동화",
+  "author": {
+    "name": "Lee Kang-Joon",
+    "email": "junhanlee91@gmail.com"
+  },
+  "homepage": "https://github.com/Junhan2/react-best-practices-review",
+  "repository": "https://github.com/Junhan2/react-best-practices-review",
+  "license": "MIT",
+  "keywords": [
+    "react",
+    "nextjs",
+    "performance",
+    "code-review",
+    "best-practices",
+    "async-waterfall",
+    "bundle-size"
+  ]
+}

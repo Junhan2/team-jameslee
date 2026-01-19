@@ -1,0 +1,13 @@
+{
+  "name": "session-recap",
+  "owner": {
+    "name": "Junhan2"
+  },
+  "plugins": [
+    {
+      "name": "session-recap",
+      "source": ".",
+      "description": "Track work sessions with structured logs and quick recaps - /log, /recap commands"
+    }
+  ]
+}

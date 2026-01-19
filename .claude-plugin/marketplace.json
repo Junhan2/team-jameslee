@@ -1,0 +1,21 @@
+{
+  "name": "team-jameslee",
+  "owner": {
+    "name": "Junhan2",
+    "email": "junhanlee91@gmail.com"
+  },
+  "description": "Curated Claude Code plugins for productivity and code quality",
+  "homepage": "https://github.com/Junhan2/team-jameslee",
+  "plugins": [
+    {
+      "name": "react-best-practices-review",
+      "source": "./plugins/react-best-practices-review",
+      "description": "React/Next.js performance review with confidence-based filtering. Detects async waterfalls, rerenders, bundle issues."
+    },
+    {
+      "name": "session-recap",
+      "source": "./plugins/session-recap",
+      "description": "Track work sessions with structured logs (/log) and get quick recaps (/recap). Supports Korean & English."
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "react-best-practices",
+  "description": "Vercel React Best Practices 기반 코드 리뷰 자동화 마켓플레이스",
+  "owner": {
+    "name": "Lee Junhan",
+    "email": "junhanlee91@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "react-best-practices-review",
+      "source": "./"
+    }
+  ]
+}
