@@ -11,6 +11,7 @@ A curated collection of Claude Code plugins for productivity and code quality.
 # Install all plugins
 /plugin install react-best-practices-review@team-jameslee
 /plugin install session-recap@team-jameslee
+/plugin install prompt-template-analyzer@team-jameslee
 ```
 
 ## 📦 Available Plugins
@@ -68,6 +69,35 @@ A curated collection of Claude Code plugins for productivity and code quality.
 
 ---
 
+### 3. Prompt Template Analyzer
+
+**Commands:**
+| Command | Description |
+|---------|-------------|
+| `/analyze-prompts` | Analyze prompt history for recurring patterns |
+| `/suggest-templates` | View detailed template suggestions |
+| `/create-template` | Generate interactive command from pattern |
+
+**Agents:**
+- `prompt-pattern-analyzer` - NLP-style pattern recognition and variable extraction
+
+**Features:**
+- Discovers frequently used prompt patterns
+- Creates AskUserQuestion-based interactive templates
+- 4-layer execution criteria: Plugin > Docs > Historical > Custom
+- Integrates with existing plugins (react-best-practices-review, etc.)
+- Context7 MCP support for official documentation lookup
+
+**Workflow:**
+```bash
+/analyze-prompts          # Discover patterns
+/suggest-templates 1      # View suggestion for pattern #1
+/create-template 1        # Generate /quick-review command
+/quick-review             # Use generated template
+```
+
+---
+
 ## 📁 Structure
 
 ```
@@ -80,10 +110,15 @@ team-jameslee/
 │   │   ├── commands/
 │   │   ├── rules/
 │   │   └── skills/
-│   └── session-recap/
+│   ├── session-recap/
+│   │   ├── commands/
+│   │   ├── skills/
+│   │   └── templates/
+│   └── prompt-template-analyzer/
+│       ├── agents/
 │       ├── commands/
 │       ├── skills/
-│       └── templates/
+│       └── generated-commands/
 └── README.md
 ```
 

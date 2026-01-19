@@ -16,6 +16,11 @@
       "name": "session-recap",
       "source": "./plugins/session-recap",
       "description": "Track work sessions with structured logs (/log) and get quick recaps (/recap). Supports Korean & English."
+    },
+    {
+      "name": "prompt-template-analyzer",
+      "source": "./plugins/prompt-template-analyzer",
+      "description": "Analyze past prompts to discover patterns and create reusable AskUserQuestion-based interactive templates."
     }
   ]
 }
