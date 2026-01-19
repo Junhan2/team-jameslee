@@ -39,7 +39,7 @@ git clone https://github.com/Junhan2/prompt-template-analyzer.git ~/.claude/plug
 프롬프트 히스토리를 분석하여 반복 패턴을 발견합니다.
 
 ```bash
-# 기본 설정 (최근 30일, 빈도 3회 이상)
+# 기본 설정 (최근 30일, 빈도 3회 이상, 현재 프로젝트)
 /analyze-prompts
 
 # 기간 지정
@@ -48,13 +48,26 @@ git clone https://github.com/Junhan2/prompt-template-analyzer.git ~/.claude/plug
 
 # 최소 빈도 지정
 /analyze-prompts --min-frequency=5
+
+# 전체 프로젝트 분석
+/analyze-prompts --all-projects
+
+# 종합 분석
+/analyze-prompts --days=90 --min-frequency=2 --all-projects
 ```
+
+**스마트 범위 선택**: 현재 프로젝트의 데이터가 부족하면 (20개 미만) 자동으로 분석 범위 선택 UI가 표시됩니다.
 
 **출력 예시**:
 ```
 ╔═══════════════════════════════════════════════════════════════╗
 ║        Prompt Pattern Analysis Results                        ║
 ╚═══════════════════════════════════════════════════════════════╝
+
+📊 Summary
+ Analysis Scope:          전체 프로젝트
+ Total Prompts Analyzed:  5,229
+ Patterns Discovered:     23
 
 🔥 Top Patterns (Template Candidates)
 
