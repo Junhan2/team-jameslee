@@ -1,6 +1,6 @@
 ---
 description: "Analyze past prompts to discover frequently used patterns for template creation"
-argument-hint: "[--days=30] [--min-frequency=3]"
+argument-hint: "[--days=30] [--min-frequency=3] [--all-projects]"
 allowed-tools: ["Read", "Bash", "Task", "AskUserQuestion", "Write", "Glob"]
 model: sonnet
 ---
@@ -18,6 +18,7 @@ Analyze your prompt history to discover recurring patterns that can be turned in
 Parse arguments:
 - `--days`: Analysis period in days (default: 30)
 - `--min-frequency`: Minimum occurrences to consider as pattern (default: 3)
+- `--all-projects`: Analyze prompts from all projects (default: current project only)
 
 If no arguments provided, ask user using AskUserQuestion:
 
@@ -51,31 +52,85 @@ ls -la ~/.claude/history.jsonl 2>/dev/null
 ls -la "$PROJECT_SESSIONS_DIR/sessions-index.json" 2>/dev/null
 ```
 
-### 3. Extract Prompts
+### 3. Check Data Availability & Determine Analysis Scope
 
-Read and filter prompts for current project:
+**IMPORTANT**: Before extracting prompts, check if sufficient data exists for current project.
 
+```bash
+# Calculate cutoff timestamp (days ago)
+DAYS=${DAYS:-30}
+CUTOFF=$(date -v-${DAYS}d +%s000 2>/dev/null || date -d "-${DAYS} days" +%s000)
+PROJECT_PATH=$(pwd)
+
+# Count prompts for current project
+PROJECT_COUNT=$(cat ~/.claude/history.jsonl 2>/dev/null | jq -r --arg proj "$PROJECT_PATH" --arg cutoff "$CUTOFF" '
+  select(.project == $proj and (.timestamp | tonumber) > ($cutoff | tonumber)) | .display // empty
+' | grep -v '^$' | wc -l | tr -d ' ')
+
+# Count total prompts across all projects
+TOTAL_COUNT=$(cat ~/.claude/history.jsonl 2>/dev/null | jq -r --arg cutoff "$CUTOFF" '
+  select((.timestamp | tonumber) > ($cutoff | tonumber)) | .display // empty
+' | grep -v '^$' | wc -l | tr -d ' ')
+
+echo "현재 프로젝트 프롬프트: ${PROJECT_COUNT}개"
+echo "전체 프롬프트: ${TOTAL_COUNT}개"
+```
+
+**Minimum threshold**: 20 prompts recommended for meaningful pattern analysis.
+
+**If `--all-projects` flag is set**: Skip to Step 4 with full analysis mode.
+
+**If current project has fewer than 20 prompts**:
+
+Use AskUserQuestion to let user decide:
+
+```
+Question: "현재 프로젝트의 프롬프트가 ${PROJECT_COUNT}개로 충분하지 않습니다. 어떻게 진행할까요?"
+Header: "분석 범위"
+Options:
+- label: "전체 프로젝트에서 분석 (Recommended)"
+  description: "${TOTAL_COUNT}개의 프롬프트를 분석하여 더 정확한 패턴을 발견합니다"
+- label: "현재 프로젝트만 분석"
+  description: "${PROJECT_COUNT}개의 제한된 데이터로 분석을 진행합니다"
+- label: "분석 취소"
+  description: "더 많은 히스토리가 쌓일 때까지 기다립니다"
+multiSelect: false
+```
+
+### 4. Extract Prompts
+
+Read and filter prompts based on determined scope:
+
+**For current project only**:
+```bash
+# Calculate cutoff timestamp (days ago)
+CUTOFF=$(date -v-${DAYS}d +%s000 2>/dev/null || date -d "-${DAYS} days" +%s000)
+PROJECT_PATH=$(pwd)
+
+# Extract prompts for current project within date range
+# NOTE: User prompts are stored in the 'display' field, NOT 'prompt'
+cat ~/.claude/history.jsonl | jq -r --arg proj "$PROJECT_PATH" --arg cutoff "$CUTOFF" '
+  select(.project == $proj and (.timestamp | tonumber) > ($cutoff | tonumber)) | .display // empty
+' | grep -v '^$'
+```
+
+**For all projects**:
 ```bash
 # Calculate cutoff timestamp (days ago)
 CUTOFF=$(date -v-${DAYS}d +%s000 2>/dev/null || date -d "-${DAYS} days" +%s000)
 
-# Extract prompts for current project within date range
-cat ~/.claude/history.jsonl | while read line; do
-  project=$(echo "$line" | jq -r '.project // empty')
-  timestamp=$(echo "$line" | jq -r '.timestamp // 0')
-  prompt=$(echo "$line" | jq -r '.prompt // empty')
-
-  if [ "$project" = "$PROJECT_PATH" ] && [ "$timestamp" -gt "$CUTOFF" ]; then
-    echo "$prompt"
-  fi
-done
+# Extract prompts from ALL projects within date range
+# NOTE: User prompts are stored in the 'display' field, NOT 'prompt'
+cat ~/.claude/history.jsonl | jq -r --arg cutoff "$CUTOFF" '
+  select((.timestamp | tonumber) > ($cutoff | tonumber)) | .display // empty
+' | grep -v '^$'
 ```
 
 If history.jsonl is not accessible, inform user and suggest alternative:
 - Check sessions-index.json for session IDs
 - Read individual session .jsonl files for full conversation data
 
-### 4. Launch Pattern Analyzer Agent
+### 5. Launch Pattern Analyzer Agent
 
 Use the Task tool to launch the `prompt-pattern-analyzer` agent with extracted prompts:
 
@@ -102,7 +157,7 @@ Return patterns in this structure:
 - Suggested template command name
 ```
 
-### 5. Filter & Rank Patterns
+### 6. Filter & Rank Patterns
 
 After agent analysis, filter patterns:
 
@@ -111,9 +166,9 @@ After agent analysis, filter patterns:
 3. Group by category (code review, feature dev, debugging, etc.)
 4. Identify patterns that could benefit from AskUserQuestion interaction
 
-### 6. Present Results
+### 7. Present Results
 
-Display discovered patterns:
+Display discovered patterns with analysis scope information:
 
 ```markdown
 ╔═══════════════════════════════════════════════════════════════╗
@@ -123,6 +178,7 @@ Display discovered patterns:
 
 📊 Summary
 ──────────────────────────────────────────────────────────────────
+ Analysis Scope:          {scope}  // "현재 프로젝트" or "전체 프로젝트"
  Total Prompts Analyzed:  {count}
  Patterns Discovered:     {pattern_count}
  Template Candidates:     {high_freq_count}
@@ -159,7 +215,7 @@ Display discovered patterns:
 ──────────────────────────────────────────────────────────────────
 ```
 
-### 7. Save Analysis Results
+### 8. Save Analysis Results
 
 Save results to `.claude/prompt-analysis/` for future reference:
 
@@ -171,7 +227,7 @@ Write analysis to file:
 - `.claude/prompt-analysis/patterns-{date}.json`: Raw pattern data
 - Use for `/create-template` and `/suggest-templates` commands
 
-### 8. Handle Edge Cases
+### 9. Handle Edge Cases
 
 **No history found**:
 ```
@@ -205,7 +261,7 @@ These files are created by Claude Code automatically.
 ## Usage Examples
 
 ```bash
-# Analyze with default settings (30 days, min 3 occurrences)
+# Analyze with default settings (30 days, min 3 occurrences, current project)
 /analyze-prompts
 
 # Analyze last 7 days
@@ -214,13 +270,18 @@ These files are created by Claude Code automatically.
 # Find very common patterns only
 /analyze-prompts --min-frequency=5
 
-# Comprehensive analysis
-/analyze-prompts --days=90 --min-frequency=2
+# Analyze all projects (skip current project check)
+/analyze-prompts --all-projects
+
+# Comprehensive analysis across all projects
+/analyze-prompts --days=90 --min-frequency=2 --all-projects
 ```
 
 ## Notes
 
-- Analysis is scoped to current project only
+- By default, analysis is scoped to current project only
+- If current project has insufficient data (<20 prompts), user can choose to analyze all projects
+- Use `--all-projects` flag to skip current project check and analyze everything
 - Patterns are anonymized (sensitive data stripped)
 - Results are stored locally in `.claude/prompt-analysis/`
 - Use `/create-template` to turn patterns into commands
