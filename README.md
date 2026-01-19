@@ -75,6 +75,7 @@ A curated collection of Claude Code plugins for productivity and code quality.
 | Command | Description |
 |---------|-------------|
 | `/analyze-prompts` | Analyze prompt history for recurring patterns |
+| `/analyze-prompts --all-projects` | Analyze across all projects |
 | `/suggest-templates` | View detailed template suggestions |
 | `/create-template` | Generate interactive command from pattern |
 
@@ -83,6 +84,7 @@ A curated collection of Claude Code plugins for productivity and code quality.
 
 **Features:**
 - Discovers frequently used prompt patterns
+- **Smart scope selection**: Auto-prompts when current project has insufficient data
 - Creates AskUserQuestion-based interactive templates
 - 4-layer execution criteria: Plugin > Docs > Historical > Custom
 - Integrates with existing plugins (react-best-practices-review, etc.)
@@ -90,10 +92,11 @@ A curated collection of Claude Code plugins for productivity and code quality.
 
 **Workflow:**
 ```bash
-/analyze-prompts          # Discover patterns
-/suggest-templates 1      # View suggestion for pattern #1
-/create-template 1        # Generate /quick-review command
-/quick-review             # Use generated template
+/analyze-prompts              # Discover patterns (current project)
+/analyze-prompts --all-projects  # Analyze all projects
+/suggest-templates 1          # View suggestion for pattern #1
+/create-template 1            # Generate /quick-review command
+/quick-review                 # Use generated template
 ```
 
 ---
