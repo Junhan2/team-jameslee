@@ -128,6 +128,6 @@ MIT License - See individual plugin directories for details.
 
 ## 👤 Author
 
-**Lee Kang-Joon (JamesLee)**
+**Junhan Lee (James Lee)**
 - GitHub: [@Junhan2](https://github.com/Junhan2)
 - Email: junhanlee91@gmail.com

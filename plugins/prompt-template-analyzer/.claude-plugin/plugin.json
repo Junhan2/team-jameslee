@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Analyze past prompts to discover patterns and create reusable AskUserQuestion-based interactive templates",
   "author": {
-    "name": "Lee Kang-Joon",
+    "name": "Junhan Lee (James Lee)",
     "email": "junhanlee91@gmail.com"
   },
   "homepage": "https://github.com/Junhan2/prompt-template-analyzer",

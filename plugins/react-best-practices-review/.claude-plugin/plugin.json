@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Vercel React Best Practices 기반 코드 리뷰 자동화 - 성능 이슈 탐지, 신뢰도 기반 필터링, PR 댓글 자동화",
   "author": {
-    "name": "Lee Kang-Joon",
+    "name": "Junhan Lee (James Lee)",
     "email": "junhanlee91@gmail.com"
   },
   "homepage": "https://github.com/Junhan2/react-best-practices-review",
