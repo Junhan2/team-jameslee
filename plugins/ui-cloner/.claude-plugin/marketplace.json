@@ -1,0 +1,14 @@
+{
+  "name": "ui-cloner",
+  "description": "레퍼런스 웹사이트의 UI 컴포넌트를 완벽하게 클론하는 플러그인",
+  "owner": {
+    "name": "Junhan Lee (James Lee)",
+    "email": "junhanlee91@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "ui-cloner",
+      "source": "./"
+    }
+  ]
+}
