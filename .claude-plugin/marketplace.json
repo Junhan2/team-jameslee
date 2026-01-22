@@ -21,6 +21,11 @@
       "name": "prompt-template-analyzer",
       "source": "./plugins/prompt-template-analyzer",
       "description": "Analyze past prompts to discover patterns and create reusable AskUserQuestion-based interactive templates."
+    },
+    {
+      "name": "ui-cloner",
+      "source": "./plugins/ui-cloner",
+      "description": "Clone UI components from reference websites with CSS extraction, multi-framework support (React, Vue, Next.js), and interaction capture."
     }
   ]
 }

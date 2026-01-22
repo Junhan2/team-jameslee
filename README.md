@@ -12,6 +12,7 @@ A curated collection of Claude Code plugins for productivity and code quality.
 /plugin install react-best-practices-review@team-jameslee
 /plugin install session-recap@team-jameslee
 /plugin install prompt-template-analyzer@team-jameslee
+/plugin install ui-cloner@team-jameslee
 ```
 
 ## 📦 Available Plugins
@@ -101,6 +102,42 @@ A curated collection of Claude Code plugins for productivity and code quality.
 
 ---
 
+### 4. UI Cloner
+
+**Commands:**
+| Command | Description |
+|---------|-------------|
+| `/clone-ui <url>` | Clone entire page UI |
+| `/clone-ui <url> <selector>` | Clone specific element (nav, hero, footer) |
+| `/clone-ui <url> <selector> <output> <framework>` | Full options |
+
+**Agents:**
+- `ui-extractor` - CSS computed styles extraction via Chrome
+
+**Supported Frameworks:**
+| Framework | Output |
+|-----------|--------|
+| vanilla (default) | HTML + CSS + JS |
+| react | TSX + CSS Modules |
+| vue | Single File Component |
+| nextjs | TSX + CSS Modules (App Router) |
+
+**Features:**
+- Auto CSS extraction via Claude in Chrome
+- Interaction capture (hover, active, focus states)
+- Responsive design support (media queries, breakpoints)
+- Theme variable extraction for dark mode
+- SVG icons and web fonts included
+
+**Examples:**
+```bash
+/clone-ui https://stripe.com                    # Full page
+/clone-ui https://stripe.com nav ./nav-clone    # Navigation only
+/clone-ui https://linear.app hero ./components react  # React component
+```
+
+---
+
 ## 📁 Structure
 
 ```
@@ -117,11 +154,15 @@ team-jameslee/
 │   │   ├── commands/
 │   │   ├── skills/
 │   │   └── templates/
-│   └── prompt-template-analyzer/
+│   ├── prompt-template-analyzer/
+│   │   ├── agents/
+│   │   ├── commands/
+│   │   ├── skills/
+│   │   └── generated-commands/
+│   └── ui-cloner/
 │       ├── agents/
 │       ├── commands/
-│       ├── skills/
-│       └── generated-commands/
+│       └── skills/
 └── README.md
 ```
 
