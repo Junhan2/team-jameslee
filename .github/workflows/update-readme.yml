@@ -1,0 +1,32 @@
+name: Update README
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/**/plugin.json'
+      - 'plugins/**/README.md'
+      - 'plugins/**/commands/*.md'
+      - 'plugins/**/agents/*.md'
+      - '.claude-plugin/marketplace.json'
+  workflow_dispatch:
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Update README
+        run: node .github/scripts/update-readme.js
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'docs: auto-update README.md'
+          file_pattern: README.md
