@@ -26,6 +26,11 @@
       "name": "ui-cloner",
       "source": "./plugins/ui-cloner",
       "description": "Clone UI components from reference websites with CSS extraction, multi-framework support (React, Vue, Next.js), and interaction capture."
+    },
+    {
+      "name": "site-mirror",
+      "source": "./plugins/site-mirror",
+      "description": "Mirror websites by downloading original resources and converting CDN URLs to local paths. Achieves ~95% fidelity for offline viewing."
     }
   ]
 }
