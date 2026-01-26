@@ -84,6 +84,20 @@ Clone UI components from reference websites with CSS extraction, multi-framework
 
 ---
 
+### 5. Site Mirror
+
+Mirror websites by downloading original resources and converting CDN URLs to local paths. Achieves ~95% fidelity for offline viewing.
+
+**Commands:**
+| Command | Description |
+|---------|-------------|
+| `/mirror-site` | 웹사이트를 완벽하게 미러링합니다 (원본 파일 다운로드 + URL 치환 방식) |
+
+**Agents:**
+- `resource-downloader` - 웹사이트의 리소스(CSS, JS, 이미지, 폰트, 애니메이션)를 다운로드하고
+
+---
+
 <!-- PLUGINS_END -->
 
 ## 📁 Structure
