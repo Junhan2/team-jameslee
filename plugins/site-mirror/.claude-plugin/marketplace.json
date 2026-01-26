@@ -1,0 +1,14 @@
+{
+  "name": "site-mirror",
+  "description": "웹사이트를 원본 파일 다운로드 + URL 치환 방식으로 완벽하게 미러링하는 플러그인 (~95% 충실도)",
+  "owner": {
+    "name": "Junhan Lee (James Lee)",
+    "email": "junhanlee91@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "site-mirror",
+      "source": "./"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "site-mirror",
+  "version": "1.0.0",
+  "description": "Mirror websites by downloading original resources and converting CDN URLs to local paths. Achieves ~95% fidelity compared to CSS extraction methods.",
+  "author": {
+    "name": "Junhan Lee (James Lee)",
+    "email": "junhanlee91@gmail.com"
+  },
+  "homepage": "https://github.com/Junhan2/team-jameslee",
+  "repository": "https://github.com/Junhan2/team-jameslee",
+  "license": "MIT",
+  "keywords": [
+    "site-clone",
+    "website-mirror",
+    "offline-website",
+    "resource-download",
+    "url-replacement",
+    "web-archiving"
+  ]
+}
