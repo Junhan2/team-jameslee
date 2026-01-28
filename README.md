@@ -98,6 +98,20 @@ Mirror websites by downloading original resources and converting CDN URLs to loc
 
 ---
 
+### 6. UI Cloner V2
+
+Clone UI with Chrome DevTools Protocol. Extracts 40+ CSS properties, authored CSS, structural patterns, and performs dual-page pixel-perfect verification.
+
+**Commands:**
+| Command | Description |
+|---------|-------------|
+| `/clone-ui-v2` | 레퍼런스 사이트의 UI를 Chrome DevTools 기반으로 완벽하게 클론합니다 |
+
+**Agents:**
+- `ui-extractor` - 레퍼런스 사이트에서 UI 컴포넌트의 CSS, HTML 구조, 에셋, 관계 정보를 추출하는 에이전트입니다
+
+---
+
 <!-- PLUGINS_END -->
 
 ## 📁 Structure
