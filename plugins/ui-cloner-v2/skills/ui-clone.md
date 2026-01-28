@@ -219,6 +219,29 @@ evaluate_script({ function: `() => {
 }` })
 ```
 
+### 2-10. Phase 2 완료 체크포인트
+
+**⚠️ CRITICAL**: Phase 3로 넘어가기 전에 다음 스크립트들이 **모두 실행되었는지** 확인하세요:
+
+| # | 스크립트 | 함수명 | 필수 | 실행 확인 |
+|---|---------|--------|------|-----------|
+| 1 | Page Survey (Script A) | `pageSurveyFn` | ✓ | |
+| 2 | Head Resource (Script G) | `headResourceFn` | ✓ | |
+| 3 | Deep Measurement (Script B) | `deepMeasurementFn` | ✓ | |
+| 4 | Pseudo-Element (Script B2) | `pseudoElementFn` | ✓ | |
+| 5 | Authored CSS (Script C) | `authoredCSSFn` | ✓ | |
+| 6 | Asset Analysis (Script E) | `assetAnalysisFn` | ✓ | |
+| 7 | **Image-Container (Script J)** | `imageContainerFn` | **✓ MUST** | |
+| 8 | Stylesheet Rules (Script H) | `stylesheetRulesFn` | ✓ | |
+| 9 | **Interaction States (Script I)** | `interactionStateFn` | **✓ MUST** | |
+| 10 | Width Chain (Script F) | `widthChainFn` | ✓ | |
+
+**⚠️ 누락된 스크립트가 있으면 지금 즉시 실행하세요.**
+
+특히 다음 두 스크립트는 반드시 실행해야 합니다:
+- **Script J (imageContainerFn)**: 이미지 크기 정확도에 필수. 누락 시 이미지가 잘못된 크기(예: 임의의 200px)로 생성됩니다.
+- **Script I (interactionStateFn)**: group-hover 패턴 감지에 필수. 누락 시 Feature cards의 hover 효과가 수동 수정 필요합니다.
+
 ---
 
 ## Phase 3: ANALYZE (분석 및 판단)
@@ -294,6 +317,14 @@ Script H 결과를 기반으로 처리:
 
 ### 3-G. 인터랙션 전략
 
+**⚠️ 전제조건**: Script I (interactionStateFn) 실행 결과가 **반드시** 있어야 합니다.
+결과가 없으면 Phase 2로 돌아가 `evaluate_script({ function: interactionStateFn })`을 실행하세요.
+
+**Script I 결과 필수 필드**:
+- `interactiveElements[]` — :hover/:active/:focus 규칙이 있는 요소들
+- `ancestorHoverPatterns[]` — group-hover 패턴 (부모:hover → 자식 스타일 변화)
+- `hoverMediaRules[]` — `@media (hover: hover)` 블록 내부 규칙
+
 Script I 결과를 기반으로 처리:
 
 | 항목 | 처리 |
@@ -306,6 +337,15 @@ Script I 결과를 기반으로 처리:
 | 복합 선택자 (.btn:hover .icon) | 원본 선택자 구조 보존 |
 
 ### 3-H. 이미지 배치 전략
+
+**⚠️ 전제조건**: Script J (imageContainerFn) 실행 결과가 **반드시** 있어야 합니다.
+결과가 없으면 Phase 2로 돌아가 `evaluate_script({ function: imageContainerFn })`을 실행하세요.
+
+**Script J 결과 필수 필드**:
+- `images[].sizingStrategy` — 이미지 크기 결정 전략 (FILL_CONTAINER, CONTAIN_FIT, COVER_FIT, NATURAL_BOUNDED, FIXED_SIZE)
+- `images[].overlays[]` — 그라디언트 오버레이 정보
+- `images[].relationship.hasScaleTransform` — scale 변환 여부
+- `images[].container.overflow` — 컨테이너 overflow 모드
 
 Script J 결과를 기반으로 각 이미지의 코드 생성 전략 결정:
 

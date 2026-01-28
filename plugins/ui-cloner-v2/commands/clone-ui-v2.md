@@ -75,13 +75,7 @@ quality 모드에 따라 실행 범위가 다릅니다.
 
 ```
 Phase 1: SURVEY    → pageSurveyFn + headResourceFn (Script G) + 전체 스크린샷
-Phase 2: MEASURE   → deepMeasurementFn + pseudoElementFn (Script B2)
-                     + authoredCSSFn + assetAnalysisFn(확장: video/iframe/picture)
-                     + imageContainerFn (Script J: 이미지-컨테이너 관계)
-                     + stylesheetRulesFn (Script H: @keyframes/@font-face)
-                     + interactionStateFn (Script I: hover/active/focus + group-hover)
-                     + widthChainFn + 미디어 쿼리
-                     + 섹션별 scrollIntoView + screenshot
+Phase 2: MEASURE   → 아래 "Phase 2 필수 실행 순서" 참조
 Phase 3: ANALYZE   → patternRecognitionFn + HTML 재구성 판단 + Authored vs Computed 결정
                      + Head 리소스 전략 (3-E) + Animation/Font 전략 (3-F)
                      + 인터랙션 전략 (3-G) + 이미지 배치 전략 (3-H)
@@ -90,6 +84,27 @@ Phase 4: GENERATE  → HTML <head>(CDN CSS, meta, favicon)
                      + JS(드롭다운, 모바일 메뉴 등) + 에셋 다운로드(fonts/ 포함)
 Phase 5: VERIFY    → 듀얼 페이지 수치 검증 (최대 3회 반복)
 ```
+
+##### Phase 2: MEASURE 필수 실행 순서
+
+**⚠️ CRITICAL**: 다음 스크립트들을 **순서대로 모두 실행**해야 합니다. 건너뛰지 마세요.
+
+| 순서 | 실행 명령 | 설명 |
+|------|----------|------|
+| 1 | `evaluate_script({ function: deepMeasurementFn })` | 40+ CSS 속성 추출 |
+| 2 | `evaluate_script({ function: pseudoElementFn })` | ::before/::after 스타일 |
+| 3 | `evaluate_script({ function: authoredCSSFn })` | auto, %, flex 원본값 |
+| 4 | `evaluate_script({ function: assetAnalysisFn })` | 이미지, SVG, video, iframe |
+| 5 | **`evaluate_script({ function: imageContainerFn })`** | ⚠️ **MUST** 이미지-컨테이너 관계 |
+| 6 | `evaluate_script({ function: stylesheetRulesFn })` | @keyframes, @font-face |
+| 7 | **`evaluate_script({ function: interactionStateFn })`** | ⚠️ **MUST** hover + ancestorHoverPatterns |
+| 8 | `evaluate_script({ function: widthChainFn })` | 너비 체인 |
+
+**⚠️ 경고**:
+- **Script J (imageContainerFn)를 건너뛰면** 이미지가 잘못된 크기(예: 임의의 200px)로 생성됩니다.
+- **Script I (interactionStateFn)를 건너뛰면** group-hover 효과가 CSS에 포함되지 않습니다.
+
+Phase 3으로 진행하기 전에 위 8개 스크립트가 **모두 실행되었는지 확인**하세요.
 
 #### fast 모드
 
