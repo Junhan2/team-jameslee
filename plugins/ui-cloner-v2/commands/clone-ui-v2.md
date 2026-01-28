@@ -77,13 +77,14 @@ quality 모드에 따라 실행 범위가 다릅니다.
 Phase 1: SURVEY    → pageSurveyFn + headResourceFn (Script G) + 전체 스크린샷
 Phase 2: MEASURE   → deepMeasurementFn + pseudoElementFn (Script B2)
                      + authoredCSSFn + assetAnalysisFn(확장: video/iframe/picture)
+                     + imageContainerFn (Script J: 이미지-컨테이너 관계)
                      + stylesheetRulesFn (Script H: @keyframes/@font-face)
-                     + interactionStateFn (Script I: hover/active/focus)
+                     + interactionStateFn (Script I: hover/active/focus + group-hover)
                      + widthChainFn + 미디어 쿼리
                      + 섹션별 scrollIntoView + screenshot
 Phase 3: ANALYZE   → patternRecognitionFn + HTML 재구성 판단 + Authored vs Computed 결정
                      + Head 리소스 전략 (3-E) + Animation/Font 전략 (3-F)
-                     + 인터랙션 전략 (3-G)
+                     + 인터랙션 전략 (3-G) + 이미지 배치 전략 (3-H)
 Phase 4: GENERATE  → HTML <head>(CDN CSS, meta, favicon)
                      + CSS(@font-face, @keyframes, ::before/::after, :hover 포함)
                      + JS(드롭다운, 모바일 메뉴 등) + 에셋 다운로드(fonts/ 포함)
@@ -279,6 +280,24 @@ $output/
 ### 리로드해도 변경이 안 보임
 - `navigate_page({ type: "reload", ignoreCache: true })` 사용 (캐시 무시 필수)
 - 파일이 올바르게 저장되었는지 확인
+
+### 이미지가 컨테이너보다 너무 작음
+- Script J (imageContainerFn) 결과에서 sizingStrategy 확인
+- FILL_CONTAINER/CONTAIN_FIT인데 max-width가 고정 px → `max-width: 100%`로 수정
+- object-fit이 fill로 되어 있으면 원본의 object-fit 값으로 교체
+- 컨테이너의 width/height가 원본과 일치하는지 확인
+
+### 이미지 가장자리 페이드 효과 없음
+- Script J 결과에서 overlays 배열 확인
+- 오버레이 div가 CSS에 포함되었는지 확인 (position: absolute, gradient 값)
+- overlay의 opacity, pointer-events 확인
+- 컨테이너에 `position: relative`가 설정되어 있는지 확인
+
+### group hover 효과 미동작
+- Script I의 ancestorHoverPatterns 결과 확인
+- CSS에 `.group:hover .child` 형태의 규칙 포함 여부
+- HTML에 group 클래스 적용 여부
+- JS에서 hover 이벤트로 구현 시 mouseenter/mouseleave 확인
 
 ### 여러 페이지 간 전환이 안 됨
 - `list_pages`로 현재 열린 페이지 목록과 pageId 확인

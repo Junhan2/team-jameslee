@@ -22,10 +22,12 @@ description: |
 ```
 Phase 1: SURVEY    → Page Survey + Head Resource + 전체 스크린샷
 Phase 2: MEASURE   → Deep Measurement + Pseudo-elements + Authored CSS
-                     + Assets(확장) + Stylesheet Rules + Interaction States
+                     + Assets(확장) + Image-Container Analysis
+                     + Stylesheet Rules + Interaction States (+ group-hover)
                      + Width Chain + 미디어 쿼리
 Phase 3: ANALYZE   → 변형 분류 + HTML 재구성 판단 + Authored vs Computed 결정
                      + Head 리소스 전략 + Animation/Font 전략 + 인터랙션 전략
+                     + 이미지 배치 전략
 Phase 4: GENERATE  → HTML <head> + CSS(@font-face, @keyframes, :hover 포함)
                      + JS + 에셋 다운로드
 Phase 5: VERIFY    → 듀얼 페이지 수치 검증 루프 (최대 3회)
@@ -134,6 +136,21 @@ evaluate_script({ function: assetAnalysisFn })
 - `<audio>` 속성 (src, controls, sources)
 - `<iframe>` 속성 (src, width, height, title, allow) — 기록만
 - `<picture>` + `<img srcset>` 반응형 이미지
+
+### 2-4.5. Image-in-Container Analysis (Script J)
+
+이미지와 컨테이너의 관계를 분석:
+
+```
+evaluate_script({ function: imageContainerFn })
+```
+
+분석 항목:
+- 이미지 sizing strategy (FILL_CONTAINER / CONTAIN_FIT / COVER_FIT / NATURAL_BOUNDED / FIXED_SIZE)
+- 컨테이너 overflow 모드와 이미지 overflow 여부
+- 그라디언트 오버레이 레이어 (radial/linear)
+- scale transform에 의한 의도적 overflow
+- 이미지-컨테이너 크기 비율
 
 ### 2-5. Stylesheet Rules (Script H)
 
@@ -288,6 +305,44 @@ Script I 결과를 기반으로 처리:
 | @media (hover: hover) | 미디어 쿼리 블록으로 포함 |
 | 복합 선택자 (.btn:hover .icon) | 원본 선택자 구조 보존 |
 
+### 3-H. 이미지 배치 전략
+
+Script J 결과를 기반으로 각 이미지의 코드 생성 전략 결정:
+
+| sizingStrategy | CSS 생성 규칙 |
+|----------------|---------------|
+| FILL_CONTAINER | `width: 100%; height: 100%; object-fit: contain/cover` |
+| CONTAIN_FIT | `width: 100%; height: 100%; object-fit: contain; aspect-ratio: W/H` |
+| COVER_FIT | `width: 100%; height: 100%; object-fit: cover` |
+| NATURAL_BOUNDED | `max-width: 100%; height: auto` |
+| FIXED_SIZE | `width: Npx; height: Npx` |
+
+#### 그라디언트 오버레이 처리
+오버레이가 감지된 경우:
+- 컨테이너에 `position: relative` 설정
+- 이미지 뒤에 `position: absolute; inset: 0` 오버레이 div 생성
+- `background-image`에 추출된 gradient 값 그대로 적용
+- `pointer-events: none; opacity: N` 적용
+
+#### scale transform 처리
+hasScaleTransform이 true인 경우:
+- 이미지에 `transform: scale(1.01)` 적용
+- 컨테이너에 `overflow: hidden` 확인 (가장자리 clipping 효과)
+
+#### overflow 전략
+
+| 원본 overflow | 이미지 관계 | 처리 |
+|---------------|-------------|------|
+| hidden + 이미지 fills | 일반 채우기 | `overflow: hidden` 유지 |
+| hidden + scale transform | 의도적 bleed | `overflow: hidden` + `transform: scale()` |
+| visible + 이미지 overflows | 의도적 overflow | `overflow: visible` 유지 (중요!) |
+| hidden + 이미지 smaller | 일반 배치 | `overflow: hidden` 유지 |
+
+#### 금지 규칙 (MUST NOT)
+- **max-width를 임의의 고정 px 값으로 설정하지 않기** (예: max-width: 200px)
+- Script J의 sizingStrategy가 FILL_CONTAINER/CONTAIN_FIT이면 반드시 width: 100% 사용
+- 원본에서 overflow: visible인 컨테이너를 overflow: hidden으로 바꾸지 않기
+
 ---
 
 ## Phase 4: GENERATE (코드 생성)
@@ -351,6 +406,30 @@ Phase 3의 판단을 기반으로 HTML 작성:
 
 /* 5. Component Styles (Script B + C) */
 /* Authored 값 우선, fallback으로 computed */
+
+/* 5.5. Image-in-Container (Script J) */
+.card-image-container {
+  position: relative;
+  overflow: hidden; /* or visible — Script J 결과에 따름 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Script J sizingStrategy에 따름 */
+  /* aspect-ratio: 500 / 342; — 원본 비율 보존 시 */
+  /* transform: scale(1.01); — 의도적 bleed 시 */
+}
+/* Gradient overlays */
+.card-image-container .overlay-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.7;
+  background-image: radial-gradient(...); /* Script J에서 추출한 값 */
+}
 
 /* 6. Pseudo-elements (Script B2) */
 .element::before {
@@ -562,17 +641,18 @@ Phase 1~4만 실행, Phase 5 (VERIFY) 건너뛰기:
 ### precise 모드 (기본)
 
 전체 5단계 실행:
-- 모든 스크립트 (A~I, B2) 실행
+- 모든 스크립트 (A~J, B2) 실행
 - authored vs computed 비교
 - 패턴 분류 + 변형 처리
 - Head 리소스 + @font-face/@keyframes + 인터랙션 상태 포함
 - ::before/::after pseudo-element 보존
+- 이미지-컨테이너 관계 분석 + 그라디언트 오버레이 + group-hover
 - 듀얼 페이지 수치 검증 루프 (최대 3회)
 - 검증 보고서 생성
 
 ---
 
-## 체크리스트 (22항목)
+## 체크리스트 (25항목)
 
 클론 완료 후 자동 검증:
 
@@ -595,7 +675,7 @@ Phase 1~4만 실행, Phase 5 (VERIFY) 건너뛰기:
 - [ ] 듀얼 페이지 수치 비교 통과 (오차 ≤ 3px)
 - [ ] 에셋 다운로드/참조/플레이스홀더 올바르게 처리
 
-### v2 확장 (7항목 — NEW)
+### v2 확장 (10항목 — NEW)
 - [ ] CDN 스타일시트가 `<head>`에 포함 (Script G)
 - [ ] 웹폰트 (@font-face) 로드 확인 (Script H)
 - [ ] @keyframes 애니메이션 정상 재생 (Script H)
@@ -603,6 +683,9 @@ Phase 1~4만 실행, Phase 5 (VERIFY) 건너뛰기:
 - [ ] :hover 스타일 변화 정확 재현 (Script I)
 - [ ] :focus/:active 상태 정확 재현 (Script I)
 - [ ] `<video>`/`<iframe>` 요소 속성 보존 (Script E 확장)
+- [ ] 이미지가 컨테이너를 올바르게 채움 (object-fit 정확, 임의 max-width 없음) (Script J)
+- [ ] 그라디언트 오버레이 레이어 보존 (radial/linear-gradient) (Script J)
+- [ ] group-hover 패턴 동작 (ancestor:hover → descendant 스타일 변화) (Script I 확장)
 
 ---
 

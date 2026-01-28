@@ -8,8 +8,10 @@ description: |
   - 40+ CSS 속성 추출 (computed + authored)
   - HTML 구조 분석 및 요소 간 관계 측정
   - 인터랙션 (hover, active, focus) 상태 캡처
+  - Ancestor hover (group-hover) 패턴 감지
   - 패턴 분류 (같은 클래스, 다른 레이아웃 감지)
   - 에셋 분석 (이미지, SVG 내부 속성, 폰트)
+  - 이미지-컨테이너 관계 분석 (sizing strategy, 오버레이, overflow)
   - CSS 변수 및 미디어 쿼리 추출
   - 컨테이너 너비 체인 추적
 tools:
@@ -42,10 +44,11 @@ Chrome DevTools Protocol(CDP) 기반으로 동작합니다.
 6. **Authored CSS 추출**: 스타일시트에서 원본 CSS 값 읽기 (auto, %, flex 등)
 7. **패턴 분류**: 같은 클래스 요소의 구조적 변형 감지
 8. **에셋 분석**: 이미지, SVG, 폰트, CSS 변수, video, iframe, picture 수집
-9. **Stylesheet Rules 추출**: @keyframes, @font-face, CSS-in-JS 규칙
-10. **인터랙션 상태 추출**: :hover, :active, :focus, transition, @media (hover: hover)
-11. **너비 체인 추적**: 요소 → body까지 width/maxWidth/padding 역추적
-12. **반응형 분석**: 미디어 쿼리 breakpoints 파악
+9. **이미지-컨테이너 분석**: img↔container 관계, sizing strategy, 그라디언트 오버레이 감지
+10. **Stylesheet Rules 추출**: @keyframes, @font-face, CSS-in-JS 규칙
+11. **인터랙션 상태 추출**: :hover, :active, :focus, transition, @media (hover: hover), group-hover
+12. **너비 체인 추적**: 요소 → body까지 width/maxWidth/padding 역추적
+13. **반응형 분석**: 미디어 쿼리 breakpoints 파악
 
 ---
 
@@ -104,7 +107,7 @@ Chrome DevTools Protocol(CDP) 기반으로 동작합니다.
 
 ---
 
-## 작업 절차 (12단계)
+## 작업 절차 (13단계)
 
 ### Step 1: 페이지 열기
 
@@ -777,6 +780,159 @@ const assetAnalysisFn = `() => {
 }`;
 ```
 
+### Step 8.5: Image-in-Container Analysis
+
+**Script J: Image-Container Relationship**
+
+```
+evaluate_script({ function: imageContainerFn })
+```
+
+```javascript
+// imageContainerFn — __CONTAINER_SELECTOR__를 실행 전 치환
+// 모든 <img>에 대해 컨테이너 관계, 오버레이, sizing strategy 분석
+const imageContainerFn = `() => {
+  const container = document.querySelector('__CONTAINER_SELECTOR__');
+  if (!container) return { error: 'Container not found' };
+
+  const images = Array.from(container.querySelectorAll('img'));
+  const results = [];
+
+  images.forEach((img, idx) => {
+    if (idx > 50) return;
+    const imgCS = window.getComputedStyle(img);
+    const imgRect = img.getBoundingClientRect();
+
+    // 1. 이미지 자체 속성
+    const imgData = {
+      src: img.src,
+      alt: img.alt,
+      rect: { w: Math.round(imgRect.width), h: Math.round(imgRect.height) },
+      naturalSize: { w: img.naturalWidth, h: img.naturalHeight },
+      objectFit: imgCS.objectFit,
+      objectPosition: imgCS.objectPosition,
+      aspectRatio: imgCS.aspectRatio !== 'auto' ? imgCS.aspectRatio : null,
+      transform: imgCS.transform !== 'none' ? imgCS.transform : null,
+      maxWidth: imgCS.maxWidth,
+      maxHeight: imgCS.maxHeight,
+      width: imgCS.width,
+      height: imgCS.height
+    };
+
+    // 2. 직접 부모 (이미지 컨테이너) 분석
+    const parent = img.parentElement;
+    const parentCS = window.getComputedStyle(parent);
+    const parentRect = parent.getBoundingClientRect();
+    const parentData = {
+      tag: parent.tagName.toLowerCase(),
+      classes: Array.from(parent.classList),
+      rect: { w: Math.round(parentRect.width), h: Math.round(parentRect.height) },
+      overflow: parentCS.overflow,
+      display: parentCS.display,
+      position: parentCS.position,
+      backgroundColor: parentCS.backgroundColor !== 'rgba(0, 0, 0, 0)' ? parentCS.backgroundColor : null,
+      borderRadius: parentCS.borderRadius !== '0px' ? parentCS.borderRadius : null,
+      border: parentCS.borderStyle !== 'none' ? parentCS.border : null,
+      padding: parentCS.padding !== '0px' ? parentCS.padding : null,
+      margin: parentCS.margin !== '0px' ? parentCS.margin : null,
+      alignItems: parentCS.alignItems !== 'normal' ? parentCS.alignItems : null,
+      justifyContent: parentCS.justifyContent !== 'normal' ? parentCS.justifyContent : null,
+      width: parentCS.width,
+      height: parentCS.height
+    };
+
+    // 3. 이미지-컨테이너 관계 분석
+    const relationship = {
+      fillMode: imgCS.objectFit,
+      widthRatio: parentRect.width > 0 ? Math.round((imgRect.width / parentRect.width) * 1000) / 1000 : 0,
+      heightRatio: parentRect.height > 0 ? Math.round((imgRect.height / parentRect.height) * 1000) / 1000 : 0,
+      overflowsWidth: imgRect.width > parentRect.width + 1,
+      overflowsHeight: imgRect.height > parentRect.height + 1,
+      clipsContent: parentCS.overflow === 'hidden' || parentCS.overflow === 'clip',
+      fillsWidth: Math.abs(imgRect.width - parentRect.width) < 5,
+      fillsHeight: Math.abs(imgRect.height - parentRect.height) < 5,
+      hasScaleTransform: imgCS.transform.includes('matrix') && !imgCS.transform.includes('matrix(1, ')
+    };
+
+    // 4. 그라디언트 오버레이 감지 (이미지의 형제 요소)
+    const overlays = Array.from(parent.children)
+      .filter(el => el !== img)
+      .map(el => {
+        const elCS = window.getComputedStyle(el);
+        if (elCS.position !== 'absolute' && elCS.position !== 'fixed') return null;
+        const bgImage = elCS.backgroundImage;
+        if (bgImage === 'none') return null;
+        return {
+          type: bgImage.includes('radial-gradient') ? 'radial' : bgImage.includes('linear-gradient') ? 'linear' : 'other',
+          backgroundImage: bgImage,
+          opacity: elCS.opacity !== '1' ? elCS.opacity : null,
+          pointerEvents: elCS.pointerEvents,
+          position: elCS.position,
+          inset: elCS.inset,
+          width: elCS.width,
+          height: elCS.height,
+          classes: Array.from(el.classList)
+        };
+      })
+      .filter(Boolean);
+
+    // 5. 카드 레벨 컨텍스트 (조부모)
+    let card = parent.parentElement;
+    let cardData = null;
+    if (card) {
+      const cardCS = window.getComputedStyle(card);
+      const cardRect = card.getBoundingClientRect();
+      cardData = {
+        tag: card.tagName.toLowerCase(),
+        classes: Array.from(card.classList).slice(0, 10),
+        rect: { w: Math.round(cardRect.width), h: Math.round(cardRect.height) },
+        display: cardCS.display,
+        flexDirection: cardCS.flexDirection !== 'row' ? cardCS.flexDirection : null,
+        overflow: cardCS.overflow !== 'visible' ? cardCS.overflow : null,
+        border: cardCS.borderStyle !== 'none' ? cardCS.border : null,
+        borderRadius: cardCS.borderRadius !== '0px' ? cardCS.borderRadius : null
+      };
+    }
+
+    // 6. 이미지 크기 결정 전략 추론
+    let sizingStrategy;
+    if (relationship.fillsWidth && relationship.fillsHeight) {
+      sizingStrategy = 'FILL_CONTAINER';
+    } else if (imgCS.objectFit === 'contain' && (relationship.fillsWidth || relationship.fillsHeight)) {
+      sizingStrategy = 'CONTAIN_FIT';
+    } else if (imgCS.objectFit === 'cover') {
+      sizingStrategy = 'COVER_FIT';
+    } else if (imgCS.maxWidth === '100%' && imgCS.width === 'auto') {
+      sizingStrategy = 'NATURAL_BOUNDED';
+    } else {
+      sizingStrategy = 'FIXED_SIZE';
+    }
+
+    results.push({
+      index: idx,
+      img: imgData,
+      container: parentData,
+      relationship,
+      overlays,
+      card: cardData,
+      sizingStrategy
+    });
+  });
+
+  return {
+    images: results,
+    totalImages: images.length,
+    summary: {
+      withOverlays: results.filter(r => r.overlays.length > 0).length,
+      withScaleTransform: results.filter(r => r.relationship.hasScaleTransform).length,
+      sizingStrategies: results.reduce((acc, r) => { acc[r.sizingStrategy] = (acc[r.sizingStrategy] || 0) + 1; return acc; }, {})
+    }
+  };
+}`;
+```
+
+캡처 대상: img↔container 크기 비율, object-fit/aspect-ratio/transform, 그라디언트 오버레이 레이어, sizing strategy (FILL_CONTAINER/CONTAIN_FIT/COVER_FIT/NATURAL_BOUNDED/FIXED_SIZE).
+
 ### Step 9: Stylesheet Rules (Keyframes + Font-Face + CSS-in-JS)
 
 **Script H: Stylesheet Rules**
@@ -904,6 +1060,20 @@ const interactionStateFn = `() => {
     const key = baseSel + '||' + matched.join(',');
     if (!map[key]) { map[key] = { selector: sel, baseSelector: baseSel, pseudoClasses: matched, mediaContext: mediaCtx || null, properties: {} }; }
     Object.assign(map[key].properties, props);
+
+    // Ancestor hover 패턴 감지: "A:hover B" 형태 (group-hover)
+    if (hasPseudo && sel.includes(' ')) {
+      const parts = sel.split(/\\s+/);
+      const hoverPart = parts.find(p => pseudoClasses.some(pc => p.includes(pc)));
+      const targetParts = parts.filter(p => !pseudoClasses.some(pc => p.includes(pc)));
+      if (hoverPart && targetParts.length > 0) {
+        let cleanHoverPart = hoverPart;
+        pseudoClasses.forEach(p => { cleanHoverPart = cleanHoverPart.split(p).join(''); });
+        map[key].isAncestorHover = true;
+        map[key].ancestorSelector = cleanHoverPart.trim();
+        map[key].targetSelector = targetParts.join(' ').trim();
+      }
+    }
   }
 
   // 2. 각 인터랙티브 요소에 매칭
@@ -963,13 +1133,25 @@ const interactionStateFn = `() => {
     } catch(e) {}
   }
 
-  return { interactiveElements: results, hoverMediaRules,
+  // 4. Ancestor hover 패턴 수집 (group-hover)
+  const ancestorHoverPatterns = Object.values(interactionRules)
+    .filter(r => r.isAncestorHover)
+    .map(r => ({
+      fullSelector: r.selector,
+      ancestorSelector: r.ancestorSelector,
+      targetSelector: r.targetSelector,
+      pseudoClasses: r.pseudoClasses,
+      properties: r.properties
+    }));
+
+  return { interactiveElements: results, hoverMediaRules, ancestorHoverPatterns,
     summary: { totalInteractive: interactiveEls.length, withInteractionCSS: results.length,
-               hoverMediaRuleCount: hoverMediaRules.length } };
+               hoverMediaRuleCount: hoverMediaRules.length,
+               ancestorHoverCount: ancestorHoverPatterns.length } };
 }`;
 ```
 
-캡처 대상: `:hover` 배경/그림자 변화, `:focus` outline, `transition` 속성, `@media (hover: hover)` 블록.
+캡처 대상: `:hover` 배경/그림자 변화, `:focus` outline, `transition` 속성, `@media (hover: hover)` 블록, **ancestor:hover → descendant 패턴** (group-hover).
 
 ### Step 11: Container Width Chain
 
@@ -1192,9 +1374,10 @@ const verifyMeasureFn = `() => {
 6.  evaluate_script(authoredCSSFn) → auto, %, flex 등 원본 값
 7.  evaluate_script(patternRecognitionFn) → 카드 변형 분류
 8.  evaluate_script(assetAnalysisFn) → 이미지, SVG, video, iframe, 폰트
-9.  evaluate_script(stylesheetRulesFn) → @keyframes, @font-face
-10. evaluate_script(interactionStateFn) → hover/active/focus 스타일
-11. evaluate_script(widthChainFn) → 컨테이너 너비 계층 추적
-12. take_screenshot → 전체 + 섹션별 스크린샷
-13. 결과 정리 및 반환
+9.  evaluate_script(imageContainerFn) → 이미지-컨테이너 관계, 오버레이, sizing strategy
+10. evaluate_script(stylesheetRulesFn) → @keyframes, @font-face
+11. evaluate_script(interactionStateFn) → hover/active/focus + group-hover 스타일
+12. evaluate_script(widthChainFn) → 컨테이너 너비 계층 추적
+13. take_screenshot → 전체 + 섹션별 스크린샷
+14. 결과 정리 및 반환
 ```
