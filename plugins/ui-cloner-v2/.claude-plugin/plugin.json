@@ -1,0 +1,22 @@
+{
+  "name": "ui-cloner-v2",
+  "version": "2.0.0",
+  "description": "Clone UI components from reference websites using Chrome DevTools Protocol. Extracts 40+ CSS properties, authored CSS rules, structural patterns, and performs dual-page pixel-perfect verification.",
+  "author": {
+    "name": "Junhan Lee (James Lee)",
+    "email": "junhanlee91@gmail.com"
+  },
+  "homepage": "https://github.com/Junhan2/team-jameslee",
+  "repository": "https://github.com/Junhan2/team-jameslee",
+  "license": "MIT",
+  "keywords": [
+    "ui-clone",
+    "css-extraction",
+    "chrome-devtools",
+    "pixel-perfect",
+    "dual-page-verify",
+    "authored-css",
+    "pattern-recognition",
+    "asset-analysis"
+  ]
+}
