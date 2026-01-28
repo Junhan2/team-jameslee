@@ -31,6 +31,11 @@
       "name": "site-mirror",
       "source": "./plugins/site-mirror",
       "description": "Mirror websites by downloading original resources and converting CDN URLs to local paths. Achieves ~95% fidelity for offline viewing."
+    },
+    {
+      "name": "ui-cloner-v2",
+      "source": "./plugins/ui-cloner-v2",
+      "description": "Clone UI with Chrome DevTools Protocol. Extracts 40+ CSS properties, authored CSS, structural patterns, and performs dual-page pixel-perfect verification."
     }
   ]
 }

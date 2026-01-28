@@ -1,0 +1,14 @@
+{
+  "name": "ui-cloner-v2",
+  "description": "Chrome DevTools 기반 UI 클론 플러그인. 40+ CSS 속성 추출, authored CSS 복원, 듀얼 페이지 수치 검증.",
+  "owner": {
+    "name": "Junhan Lee (James Lee)",
+    "email": "junhanlee91@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "ui-cloner-v2",
+      "source": "./"
+    }
+  ]
+}
