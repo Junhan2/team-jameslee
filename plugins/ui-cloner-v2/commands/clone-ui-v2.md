@@ -1,6 +1,8 @@
 ---
 name: clone-ui-v2
 description: 레퍼런스 사이트의 UI를 Chrome DevTools 기반으로 완벽하게 클론합니다
+agents:
+  - ui-extractor
 arguments:
   - name: url
     description: 클론할 레퍼런스 사이트 URL
@@ -68,6 +70,27 @@ arguments:
 **주의**: Page Survey (Script A) 결과로 정확한 선택자를 확인한 후 사용하세요.
 
 ### Step 3: 5단계 파이프라인 실행
+
+**⚠️ CRITICAL: UI Extractor 에이전트 사용 필수**
+
+반드시 **UI Extractor 에이전트** (`agents/ui-extractor.md`)를 delegation하여 실행하세요.
+
+에이전트에는 검증된 13개 스크립트가 정의되어 있습니다:
+- `pageSurveyFn` (Script A) — 페이지 구조 파악
+- `headResourceFn` (Script G) — CDN CSS, 폰트, meta, favicon
+- `deepMeasurementFn` (Script B) — 40+ CSS 속성 추출
+- `pseudoElementFn` (Script B2) — ::before/::after
+- `authoredCSSFn` (Script C) — auto, %, flex 원본값
+- `assetAnalysisFn` (Script D) — 이미지, SVG, video
+- `imageContainerFn` (Script J) — 이미지-컨테이너 관계, sizingStrategy
+- `stylesheetRulesFn` (Script H) — @keyframes, @font-face
+- `interactionStateFn` (Script I) — hover, group-hover, ancestorHoverPatterns
+- `widthChainFn` (Script F) — 너비 체인 분석
+- `patternRecognitionFn` (Script E) — 패턴 인식
+
+**🚫 절대 자체 스크립트를 작성하지 마세요.** 에이전트의 검증된 스크립트를 사용해야만 정확한 클론이 가능합니다.
+
+---
 
 quality 모드에 따라 실행 범위가 다릅니다.
 
