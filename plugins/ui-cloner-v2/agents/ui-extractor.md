@@ -35,14 +35,17 @@ Chrome DevTools Protocol(CDP) 기반으로 동작합니다.
 ## 역할
 
 1. **페이지 서베이**: 전체 페이지 구조 파악, 시맨틱 섹션 식별
-2. **CSS 추출**: 대상 요소의 40+ computed styles 추출 (카테고리별)
-3. **관계 측정**: 부모-자식 상대 위치, 형제 간격, 너비 비율 계산
-4. **Authored CSS 추출**: 스타일시트에서 원본 CSS 값 읽기 (auto, %, flex 등)
-5. **패턴 분류**: 같은 클래스 요소의 구조적 변형 감지
-6. **에셋 분석**: 이미지 URL, SVG 내부 속성, 폰트, CSS 변수 수집
-7. **너비 체인 추적**: 요소 → body까지 width/maxWidth/padding 역추적
-8. **인터랙션 캡처**: hover, active, focus 등의 상태별 스타일 추출
-9. **반응형 분석**: 미디어 쿼리 breakpoints 파악
+2. **Head 리소스 추출**: CDN CSS, 폰트, meta, favicon, 인라인 스타일
+3. **CSS 추출**: 대상 요소의 40+ computed styles 추출 (카테고리별)
+4. **Pseudo-element 추출**: ::before, ::after, ::placeholder 스타일
+5. **관계 측정**: 부모-자식 상대 위치, 형제 간격, 너비 비율 계산
+6. **Authored CSS 추출**: 스타일시트에서 원본 CSS 값 읽기 (auto, %, flex 등)
+7. **패턴 분류**: 같은 클래스 요소의 구조적 변형 감지
+8. **에셋 분석**: 이미지, SVG, 폰트, CSS 변수, video, iframe, picture 수집
+9. **Stylesheet Rules 추출**: @keyframes, @font-face, CSS-in-JS 규칙
+10. **인터랙션 상태 추출**: :hover, :active, :focus, transition, @media (hover: hover)
+11. **너비 체인 추적**: 요소 → body까지 width/maxWidth/padding 역추적
+12. **반응형 분석**: 미디어 쿼리 breakpoints 파악
 
 ---
 
@@ -101,7 +104,7 @@ Chrome DevTools Protocol(CDP) 기반으로 동작합니다.
 
 ---
 
-## 작업 절차 (8단계)
+## 작업 절차 (12단계)
 
 ### Step 1: 페이지 열기
 
@@ -181,7 +184,69 @@ const pageSurveyFn = `() => {
 }`;
 ```
 
-### Step 3: Deep Measurement + Relationships (40+ 속성 추출)
+### Step 3: Head Resource Extraction
+
+**Script G: Head Resource**
+
+```
+evaluate_script({ function: headResourceFn })
+```
+
+```javascript
+// headResourceFn — <head>의 모든 외부 리소스 수집
+const headResourceFn = `() => {
+  const head = document.head;
+  if (!head) return { error: 'No head element' };
+
+  const stylesheets = Array.from(head.querySelectorAll('link[rel="stylesheet"]')).map(link => ({
+    href: link.href, media: link.media || 'all', crossorigin: link.crossOrigin || null
+  }));
+
+  const hints = Array.from(head.querySelectorAll(
+    'link[rel="preconnect"], link[rel="preload"], link[rel="prefetch"], link[rel="dns-prefetch"]'
+  )).map(link => ({
+    rel: link.rel, href: link.href,
+    as: link.getAttribute('as') || null, crossorigin: link.crossOrigin || null
+  }));
+
+  const icons = Array.from(head.querySelectorAll(
+    'link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]'
+  )).map(link => ({
+    rel: link.rel, href: link.href,
+    sizes: link.getAttribute('sizes') || null, type: link.type || null
+  }));
+
+  const metaTags = Array.from(head.querySelectorAll(
+    'meta[property^="og:"], meta[name="viewport"], meta[name="theme-color"], ' +
+    'meta[name="description"], meta[property^="twitter:"]'
+  )).map(meta => ({
+    property: meta.getAttribute('property') || null,
+    name: meta.getAttribute('name') || null,
+    content: meta.content || null
+  }));
+
+  const scripts = Array.from(head.querySelectorAll('script[src]')).map(s => ({
+    src: s.src, async: s.async, defer: s.defer, type: s.type || null
+  }));
+
+  const inlineStyles = Array.from(head.querySelectorAll('style')).map((style, i) => ({
+    index: i,
+    content: style.textContent.length < 5000 ? style.textContent : '[TOO_LARGE: ' + style.textContent.length + ' chars]',
+    charCount: style.textContent.length
+  }));
+
+  return {
+    stylesheets, performanceHints: hints, icons, metaTags, externalScripts: scripts,
+    inlineStyles, charset: document.characterSet,
+    summary: { stylesheetCount: stylesheets.length, iconCount: icons.length,
+               scriptCount: scripts.length, inlineStyleCount: inlineStyles.length }
+  };
+}`;
+```
+
+캡처 대상: CDN CSS URL, preload 폰트, favicon, OG/Twitter meta, 인라인 `<style>`.
+
+### Step 4: Deep Measurement + Relationships (40+ 속성 추출)
 
 **Script B: Deep Measurement**
 
@@ -312,7 +377,63 @@ const deepMeasurementFn = `() => {
 
 **배치 처리**: `__BATCH_LIMIT__` 기본값 50. 요소 50개 초과 시 오프셋을 조정하여 반복 호출합니다.
 
-### Step 4: Authored CSS Rule Extraction
+### Step 5: Pseudo-Element Styles
+
+**Script B2: Pseudo-Element Extraction**
+
+```
+evaluate_script({ function: pseudoElementFn })
+```
+
+```javascript
+// pseudoElementFn — __PARENT_SELECTOR__와 __BATCH_LIMIT__를 실행 전 치환
+const pseudoElementFn = `() => {
+  const parent = document.querySelector('__PARENT_SELECTOR__');
+  if (!parent) return { error: 'Parent not found' };
+
+  const pseudoTypes = ['::before', '::after', '::placeholder'];
+  const relevantProps = [
+    'content', 'display', 'position', 'top', 'left', 'right', 'bottom',
+    'width', 'height', 'background', 'backgroundColor', 'backgroundImage',
+    'color', 'fontSize', 'fontFamily', 'opacity', 'transform',
+    'borderRadius', 'border', 'boxShadow', 'zIndex', 'pointerEvents'
+  ];
+
+  const elements = [parent, ...Array.from(parent.querySelectorAll('*')).slice(0, __BATCH_LIMIT__)];
+  const results = [];
+
+  elements.forEach((el, idx) => {
+    pseudoTypes.forEach(pseudo => {
+      const computed = window.getComputedStyle(el, pseudo);
+      const content = computed.getPropertyValue('content');
+      const display = computed.getPropertyValue('display');
+      if ((!content || content === 'none' || content === 'normal') && display === 'none') return;
+
+      const styles = {};
+      relevantProps.forEach(prop => {
+        const kebab = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
+        const val = computed.getPropertyValue(kebab);
+        if (val && val !== 'none' && val !== 'normal' && val !== 'auto' && val !== '0px' && val !== 'rgba(0, 0, 0, 0)') {
+          styles[prop] = val;
+        }
+      });
+      if (pseudo === '::before' || pseudo === '::after') styles.content = content;
+
+      if (Object.keys(styles).length > 0) {
+        const tag = el.tagName.toLowerCase();
+        const cls = Array.from(el.classList).join('.');
+        results.push({ elementIndex: idx, selector: el.id ? '#' + el.id : (cls ? tag + '.' + cls : tag), pseudo, styles });
+      }
+    });
+  });
+
+  return { pseudoElements: results, totalScanned: elements.length, pseudoCount: results.length };
+}`;
+```
+
+캡처 대상: ::before/::after 장식 요소, 오버레이, ::placeholder 스타일.
+
+### Step 6: Authored CSS Rule Extraction
 
 **Script C: Authored CSS**
 
@@ -418,7 +539,7 @@ const authoredCSSFn = `() => {
 | CORS 차단 | `24px` | **USE computed** — fallback |
 | (없음) | `border-radius: 8px` | **USE computed** — 고정값 |
 
-### Step 5: Pattern Recognition
+### Step 7: Pattern Recognition
 
 **Script D: Pattern Recognition**
 
@@ -504,9 +625,9 @@ const patternRecognitionFn = `() => {
 }`;
 ```
 
-### Step 6: Asset Analysis
+### Step 8: Asset Analysis (확장)
 
-**Script E: Asset Analysis**
+**Script E: Asset Analysis (+ Video/Audio/Iframe/Picture)**
 
 ```
 evaluate_script({ function: assetAnalysisFn })
@@ -593,24 +714,264 @@ const assetAnalysisFn = `() => {
     } catch(e) { /* CORS */ }
   }
 
+  // 6. Video
+  const videos = Array.from(container.querySelectorAll('video')).map(video => ({
+    src: video.src || null, poster: video.poster || null,
+    width: video.width || null, height: video.height || null,
+    autoplay: video.autoplay, loop: video.loop, muted: video.muted, controls: video.controls,
+    sources: Array.from(video.querySelectorAll('source')).map(s => ({ src: s.src, type: s.type || null })),
+    classes: Array.from(video.classList)
+  }));
+
+  // 7. Audio
+  const audios = Array.from(container.querySelectorAll('audio')).map(audio => ({
+    src: audio.src || null, controls: audio.controls,
+    sources: Array.from(audio.querySelectorAll('source')).map(s => ({ src: s.src, type: s.type || null }))
+  }));
+
+  // 8. Iframe (기록만 — Typeform 등 외부 임베드)
+  const iframes = Array.from(container.querySelectorAll('iframe')).map(iframe => ({
+    src: iframe.src || null, width: iframe.width || null, height: iframe.height || null,
+    title: iframe.title || null, allow: iframe.allow || null, classes: Array.from(iframe.classList)
+  }));
+
+  // 9. 반응형 이미지 (picture + img[srcset])
+  const responsiveImages = [];
+  container.querySelectorAll('picture').forEach(picture => {
+    const sources = Array.from(picture.querySelectorAll('source')).map(s => ({
+      srcset: s.srcset || null, media: s.media || null, type: s.type || null
+    }));
+    const img = picture.querySelector('img');
+    responsiveImages.push({
+      type: 'picture', sources,
+      fallbackImg: img ? { src: img.src, alt: img.alt, srcset: img.srcset || null } : null
+    });
+  });
+  container.querySelectorAll('img[srcset]').forEach(img => {
+    if (img.closest('picture')) return;
+    responsiveImages.push({ type: 'img-srcset', src: img.src, srcset: img.srcset, sizes: img.sizes || null });
+  });
+
   return {
     images,
     backgroundImages: bgImages,
     svgs,
     fonts: Array.from(fonts),
     cssVariables: cssVars,
+    videos,
+    audios,
+    iframes,
+    responsiveImages,
     summary: {
       imageCount: images.length,
       bgImageCount: bgImages.length,
       svgCount: svgs.length,
       fontCount: fonts.size,
-      cssVarCount: Object.keys(cssVars).length
+      cssVarCount: Object.keys(cssVars).length,
+      videoCount: videos.length,
+      audioCount: audios.length,
+      iframeCount: iframes.length,
+      responsiveImageCount: responsiveImages.length
     }
   };
 }`;
 ```
 
-### Step 7: Container Width Chain
+### Step 9: Stylesheet Rules (Keyframes + Font-Face + CSS-in-JS)
+
+**Script H: Stylesheet Rules**
+
+```
+evaluate_script({ function: stylesheetRulesFn })
+```
+
+```javascript
+// stylesheetRulesFn — @keyframes, @font-face, CSS-in-JS를 한 번의 stylesheet 순회로 추출
+const stylesheetRulesFn = `() => {
+  const keyframes = [];
+  const fontFaces = [];
+  const injectedStyles = [];
+  let corsBlockedCount = 0;
+
+  for (const sheet of document.styleSheets) {
+    let rules;
+    try { rules = sheet.cssRules; } catch(e) { corsBlockedCount++; continue; }
+    const isInjected = !sheet.href;
+
+    for (const rule of rules) {
+      if (rule instanceof CSSKeyframesRule) {
+        const frames = [];
+        for (const frame of rule.cssRules) {
+          const props = {};
+          for (const prop of frame.style) { props[prop] = frame.style.getPropertyValue(prop); }
+          frames.push({ keyText: frame.keyText, properties: props });
+        }
+        keyframes.push({ name: rule.name, frames,
+          cssText: rule.cssText.length < 3000 ? rule.cssText : '[TOO_LARGE]' });
+      }
+      if (rule instanceof CSSFontFaceRule) {
+        fontFaces.push({
+          fontFamily: rule.style.getPropertyValue('font-family')?.replace(/['"]/g, '') || null,
+          src: rule.style.getPropertyValue('src') || null,
+          fontWeight: rule.style.getPropertyValue('font-weight') || null,
+          fontStyle: rule.style.getPropertyValue('font-style') || null,
+          fontDisplay: rule.style.getPropertyValue('font-display') || null,
+          cssText: rule.cssText.length < 2000 ? rule.cssText : '[TOO_LARGE]'
+        });
+      }
+    }
+
+    if (isInjected && rules.length > 0) {
+      const cssText = Array.from(rules).map(r => r.cssText).join('\\n');
+      if (cssText.length > 0) {
+        injectedStyles.push({
+          ruleCount: rules.length,
+          cssText: cssText.length < 10000 ? cssText : '[TOO_LARGE: ' + cssText.length + ' chars]'
+        });
+      }
+    }
+  }
+
+  document.querySelectorAll('style[data-styled], style[data-emotion], style[data-jss]').forEach(el => {
+    if (el.textContent.length > 0) {
+      injectedStyles.push({
+        marker: el.getAttribute('data-styled') ? 'styled-components'
+              : el.getAttribute('data-emotion') ? 'emotion' : 'jss',
+        cssText: el.textContent.length < 10000 ? el.textContent : '[TOO_LARGE]'
+      });
+    }
+  });
+
+  return { keyframes, fontFaces, injectedStyles, corsBlockedSheets: corsBlockedCount,
+    summary: { keyframeCount: keyframes.length, fontFaceCount: fontFaces.length,
+               injectedStyleCount: injectedStyles.length } };
+}`;
+```
+
+캡처 대상: `@keyframes spin`, woff2 `@font-face`, Next.js 인라인 스타일, styled-components/emotion 규칙.
+
+### Step 10: Interaction State Extraction
+
+**Script I: Interaction States (hover/active/focus)**
+
+```
+evaluate_script({ function: interactionStateFn })
+```
+
+```javascript
+// interactionStateFn — __CONTAINER_SELECTOR__를 실행 전 치환
+const interactionStateFn = `() => {
+  const container = document.querySelector('__CONTAINER_SELECTOR__');
+  if (!container) return { error: 'Container not found' };
+
+  const interactiveEls = container.querySelectorAll(
+    'a, button, [role="button"], input, select, textarea, ' +
+    '[tabindex], [class*="btn"], [class*="button"], [class*="link"], [class*="card"], [class*="hover"]'
+  );
+
+  const pseudoClasses = [':hover', ':active', ':focus', ':focus-visible', ':focus-within'];
+  const results = [];
+
+  // 1. CSS 규칙에서 모든 인터랙션 pseudo-class 수집
+  const interactionRules = {};
+  for (const sheet of document.styleSheets) {
+    try {
+      for (const rule of sheet.cssRules) { collectRules(rule, '', interactionRules); }
+    } catch(e) {}
+  }
+
+  function collectRules(rule, mediaCtx, map) {
+    if (rule instanceof CSSMediaRule) {
+      for (const inner of rule.cssRules) { collectRules(inner, rule.conditionText, map); }
+      return;
+    }
+    if (!rule.selectorText || !rule.style) return;
+    const sel = rule.selectorText;
+    const hasPseudo = pseudoClasses.some(p => sel.includes(p));
+    if (!hasPseudo) return;
+
+    let baseSel = sel;
+    pseudoClasses.forEach(p => {
+      baseSel = baseSel.split(p).join('');
+    });
+    baseSel = baseSel.trim();
+    const matched = pseudoClasses.filter(p => sel.includes(p));
+
+    const props = {};
+    for (const prop of rule.style) { props[prop] = rule.style.getPropertyValue(prop); }
+    if (Object.keys(props).length === 0) return;
+
+    const key = baseSel + '||' + matched.join(',');
+    if (!map[key]) { map[key] = { selector: sel, baseSelector: baseSel, pseudoClasses: matched, mediaContext: mediaCtx || null, properties: {} }; }
+    Object.assign(map[key].properties, props);
+  }
+
+  // 2. 각 인터랙티브 요소에 매칭
+  interactiveEls.forEach((el, idx) => {
+    if (idx > 100) return;
+    const tag = el.tagName.toLowerCase();
+    const classes = Array.from(el.classList);
+    const selector = el.id ? '#' + el.id : (classes.length ? tag + '.' + classes.join('.') : tag);
+
+    const base = window.getComputedStyle(el);
+    const baseStyles = {
+      backgroundColor: base.backgroundColor, color: base.color,
+      borderColor: base.borderColor, boxShadow: base.boxShadow,
+      transform: base.transform, opacity: base.opacity,
+      textDecoration: base.textDecoration, outline: base.outline,
+      borderRadius: base.borderRadius, scale: base.scale,
+      filter: base.filter, cursor: base.cursor, transition: base.transition
+    };
+
+    const matchedRules = [];
+    for (const [key, ruleData] of Object.entries(interactionRules)) {
+      try {
+        if (el.matches(ruleData.baseSelector)) {
+          matchedRules.push({
+            pseudoClasses: ruleData.pseudoClasses,
+            fullSelector: ruleData.selector,
+            mediaContext: ruleData.mediaContext,
+            properties: ruleData.properties
+          });
+        }
+      } catch(e) {}
+    }
+
+    if (matchedRules.length > 0) {
+      results.push({
+        index: idx, tag, selector, classes,
+        hasTransition: base.transition !== 'all 0s ease 0s' && base.transition !== 'none',
+        transitionValue: base.transition,
+        baseStyles, interactionStates: matchedRules
+      });
+    }
+  });
+
+  // 3. @media (hover: hover) 규칙
+  const hoverMediaRules = [];
+  for (const sheet of document.styleSheets) {
+    try {
+      for (const rule of sheet.cssRules) {
+        if (rule instanceof CSSMediaRule && rule.conditionText.includes('hover')) {
+          const innerRules = [];
+          for (const inner of rule.cssRules) { if (inner.cssText) innerRules.push(inner.cssText); }
+          if (innerRules.length > 0) {
+            hoverMediaRules.push({ condition: rule.conditionText, rules: innerRules.slice(0, 50) });
+          }
+        }
+      }
+    } catch(e) {}
+  }
+
+  return { interactiveElements: results, hoverMediaRules,
+    summary: { totalInteractive: interactiveEls.length, withInteractionCSS: results.length,
+               hoverMediaRuleCount: hoverMediaRules.length } };
+}`;
+```
+
+캡처 대상: `:hover` 배경/그림자 변화, `:focus` outline, `transition` 속성, `@media (hover: hover)` 블록.
+
+### Step 11: Container Width Chain
 
 **Script F: Container Width Chain**
 
@@ -675,7 +1036,7 @@ const widthChainFn = `() => {
 }`;
 ```
 
-### Step 8: 전체 스크린샷 + 섹션별 스크린샷
+### Step 12: 전체 스크린샷 + 섹션별 스크린샷
 
 ```
 take_screenshot({ filePath: "$output/screenshots/full-page.png", fullPage: true })
@@ -823,13 +1184,17 @@ const verifyMeasureFn = `() => {
 사용자: "stripe.com의 Feature 섹션 CSS 추출해줘"
 
 에이전트 실행:
-1. new_page → stripe.com 열기
-2. evaluate_script(pageSurveyFn) → 전체 구조 파악, Feature 섹션 식별
-3. evaluate_script(deepMeasurementFn) → 40+ 속성 + 부모/자식/형제 관계 추출
-4. evaluate_script(authoredCSSFn) → auto, %, flex 등 원본 값 추출
-5. evaluate_script(patternRecognitionFn) → 카드 변형 분류
-6. evaluate_script(assetAnalysisFn) → 이미지 URL, SVG 내부 속성, 폰트
-7. evaluate_script(widthChainFn) → 컨테이너 너비 계층 추적
-8. take_screenshot → 전체 + 섹션별 스크린샷
-9. 결과 정리 및 반환
+1.  new_page → stripe.com 열기
+2.  evaluate_script(pageSurveyFn) → 전체 구조 파악, Feature 섹션 식별
+3.  evaluate_script(headResourceFn) → <head> CDN CSS, 폰트, meta, favicon
+4.  evaluate_script(deepMeasurementFn) → 40+ 속성 + 부모/자식/형제 관계
+5.  evaluate_script(pseudoElementFn) → ::before/::after 장식 요소
+6.  evaluate_script(authoredCSSFn) → auto, %, flex 등 원본 값
+7.  evaluate_script(patternRecognitionFn) → 카드 변형 분류
+8.  evaluate_script(assetAnalysisFn) → 이미지, SVG, video, iframe, 폰트
+9.  evaluate_script(stylesheetRulesFn) → @keyframes, @font-face
+10. evaluate_script(interactionStateFn) → hover/active/focus 스타일
+11. evaluate_script(widthChainFn) → 컨테이너 너비 계층 추적
+12. take_screenshot → 전체 + 섹션별 스크린샷
+13. 결과 정리 및 반환
 ```

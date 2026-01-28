@@ -74,11 +74,19 @@ quality 모드에 따라 실행 범위가 다릅니다.
 #### precise 모드 (기본)
 
 ```
-Phase 1: SURVEY    → pageSurveyFn + 전체 스크린샷
-Phase 2: MEASURE   → deepMeasurementFn + authoredCSSFn + assetAnalysisFn + widthChainFn
-                     + 미디어 쿼리 + 섹션별 scrollIntoView + screenshot
+Phase 1: SURVEY    → pageSurveyFn + headResourceFn (Script G) + 전체 스크린샷
+Phase 2: MEASURE   → deepMeasurementFn + pseudoElementFn (Script B2)
+                     + authoredCSSFn + assetAnalysisFn(확장: video/iframe/picture)
+                     + stylesheetRulesFn (Script H: @keyframes/@font-face)
+                     + interactionStateFn (Script I: hover/active/focus)
+                     + widthChainFn + 미디어 쿼리
+                     + 섹션별 scrollIntoView + screenshot
 Phase 3: ANALYZE   → patternRecognitionFn + HTML 재구성 판단 + Authored vs Computed 결정
-Phase 4: GENERATE  → HTML/CSS/JS 코드 생성 + 에셋 처리
+                     + Head 리소스 전략 (3-E) + Animation/Font 전략 (3-F)
+                     + 인터랙션 전략 (3-G)
+Phase 4: GENERATE  → HTML <head>(CDN CSS, meta, favicon)
+                     + CSS(@font-face, @keyframes, ::before/::after, :hover 포함)
+                     + JS(드롭다운, 모바일 메뉴 등) + 에셋 다운로드(fonts/ 포함)
 Phase 5: VERIFY    → 듀얼 페이지 수치 검증 (최대 3회 반복)
 ```
 
@@ -97,12 +105,13 @@ Phase 5: (건너뜀)  → 스크린샷 비교만
 #### vanilla (기본값)
 ```
 $output/
-├── index.html          # 메인 HTML
-├── styles.css          # 모든 스타일
-├── scripts.js          # 인터랙션 로직 (있는 경우)
+├── index.html          # <head> 리소스(CDN CSS, meta, favicon) 포함
+├── styles.css          # @font-face, @keyframes, ::before/::after, :hover 포함
+├── scripts.js          # 드롭다운, 모바일 메뉴 등 인터랙션
 ├── assets/
-│   ├── images/         # 다운로드된 이미지
-│   └── icons/          # 추출된 SVG
+│   ├── images/         # 다운로드된 이미지 (PNG, JPG, 배경 SVG)
+│   ├── icons/          # 아이콘 SVG, favicon
+│   └── fonts/          # woff2 웹폰트 파일 [NEW]
 ├── screenshots/        # 원본 + 클론 비교용
 │   ├── full-page.png
 │   ├── original-*.png
@@ -237,10 +246,35 @@ $output/
 - CORS나 인증으로 다운로드 차단 시 `assets: reference`로 전환
 - WebP/AVIF 등 형식 문제 시 확인 필요
 
-### hover 상태가 정확하지 않음
-- DevTools hover 도구 사용 후 hover state가 persist될 수 있음
-- `evaluate_script`로 CSS 규칙에서 `:hover` 선택자를 직접 읽어 정확한 hover 스타일 확인
-- 스크린샷만 의존하지 말고 computed style 값으로 검증
+### hover 효과가 재현되지 않음
+- Script I (interactionStateFn) 결과 확인: `interactiveElements` 배열에 해당 요소 포함 여부
+- CSS에 `:hover` 규칙이 포함되었는지 확인 (styles.css 섹션 7)
+- `transition` 속성이 기본 스타일에 포함되었는지 확인
+- `@media (hover: hover)` 블록이 CSS에 포함되었는지 확인 (Tailwind이 생성하는 경우)
+- 복합 선택자 (.parent:hover .child)의 구조가 HTML과 일치하는지 확인
+
+### @keyframes 애니메이션이 동작하지 않음
+- Script H (stylesheetRulesFn) 결과 확인: `corsBlockedSheets` 수 확인
+- CORS 차단 시 원본 CDN `<link>` 태그로 직접 참조
+- styles.css에 @keyframes 블록이 포함되었는지 확인
+- animation 속성이 해당 요소에 적용되었는지 확인
+
+### 폰트가 원본과 다르게 보임
+- Script G (headResourceFn) 결과에서 폰트 preload 링크 확인
+- Script H (stylesheetRulesFn) 결과에서 @font-face 선언 확인
+- woff2 파일이 assets/fonts/에 다운로드되었는지 확인
+- styles.css @font-face의 src URL 경로가 올바른지 확인
+- font-display: swap 적용 여부 확인
+
+### ::before/::after가 누락됨
+- Script B2 (pseudoElementFn) 결과에서 해당 요소의 pseudo-element 확인
+- content 속성값이 정확히 포함되었는지 확인 (빈 문자열 `""` 포함)
+- position, z-index 등 레이아웃 속성이 보존되었는지 확인
+
+### Tailwind 클래스가 적용되지 않음
+- v2는 Tailwind 유틸리티 클래스가 아닌 computed → custom CSS로 변환합니다
+- 원본의 Tailwind 클래스 대신 추출된 스타일값이 styles.css에 포함됩니다
+- CDN Tailwind CSS가 필요한 경우 Script G에서 추출한 CDN `<link>`로 포함
 
 ### 리로드해도 변경이 안 보임
 - `navigate_page({ type: "reload", ignoreCache: true })` 사용 (캐시 무시 필수)

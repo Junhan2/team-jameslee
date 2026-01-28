@@ -20,11 +20,15 @@ description: |
 ## 5단계 파이프라인
 
 ```
-Phase 1: SURVEY    → Page Survey로 전체 구조 파악
-Phase 2: MEASURE   → Deep Measurement + Authored CSS + Width Chain
+Phase 1: SURVEY    → Page Survey + Head Resource + 전체 스크린샷
+Phase 2: MEASURE   → Deep Measurement + Pseudo-elements + Authored CSS
+                     + Assets(확장) + Stylesheet Rules + Interaction States
+                     + Width Chain + 미디어 쿼리
 Phase 3: ANALYZE   → 변형 분류 + HTML 재구성 판단 + Authored vs Computed 결정
-Phase 4: GENERATE  → 코드 생성 + 에셋 다운로드
-Phase 5: VERIFY    → 듀얼 페이지 수치 검증 루프
+                     + Head 리소스 전략 + Animation/Font 전략 + 인터랙션 전략
+Phase 4: GENERATE  → HTML <head> + CSS(@font-face, @keyframes, :hover 포함)
+                     + JS + 에셋 다운로드
+Phase 5: VERIFY    → 듀얼 페이지 수치 검증 루프 (최대 3회)
 ```
 
 ---
@@ -58,7 +62,22 @@ evaluate_script({ function: pageSurveyFn })
 - 이미지/SVG/링크 수 파악
 - 타겟 섹션의 정확한 CSS 선택자 결정
 
-### 1-3. 전체 스크린샷
+### 1-3. Head 리소스 수집
+
+```
+# <head> 리소스 추출 (Script G: Head Resource)
+evaluate_script({ function: headResourceFn })
+```
+
+수집 대상:
+- CDN 스타일시트 URL (Next.js 번들 CSS 등)
+- 폰트 preload 링크 (woff2 등)
+- favicon/apple-touch-icon
+- OG/Twitter meta 태그
+- 인라인 `<style>` 내용
+- preconnect/preload 힌트
+
+### 1-4. 전체 스크린샷
 
 ```
 take_screenshot({ filePath: "$output/screenshots/full-page.png", fullPage: true })
@@ -79,7 +98,19 @@ evaluate_script({ function: deepMeasurementFn })
 - `__PARENT_SELECTOR__` → Survey에서 결정된 섹션 선택자
 - `__BATCH_LIMIT__` → 50 (초과 시 배치 분할)
 
-### 2-2. Authored CSS (Script C)
+### 2-2. Pseudo-Element Styles (Script B2)
+
+::before/::after/::placeholder 스타일 추출:
+
+```
+evaluate_script({ function: pseudoElementFn })
+```
+
+- 장식 요소 (오버레이, 구분선, 배경 패턴)
+- ::placeholder 입력 필드 스타일
+- content 속성값 보존
+
+### 2-3. Authored CSS (Script C)
 
 원본 스타일시트에서 authored 값 추출:
 
@@ -90,7 +121,47 @@ evaluate_script({ function: authoredCSSFn })
 - `auto`, `%`, `flex`, `0 auto` 등 computed에서 소실되는 값 복원
 - CORS 차단 시 computed로 graceful fallback
 
-### 2-3. Width Chain (Script F)
+### 2-4. Asset Analysis (Script E — 확장)
+
+이미지, SVG, 폰트, CSS 변수, video, audio, iframe, 반응형 이미지 수집:
+
+```
+evaluate_script({ function: assetAnalysisFn })
+```
+
+확장 항목:
+- `<video>` 속성 (src, poster, autoplay, loop, muted, controls, sources)
+- `<audio>` 속성 (src, controls, sources)
+- `<iframe>` 속성 (src, width, height, title, allow) — 기록만
+- `<picture>` + `<img srcset>` 반응형 이미지
+
+### 2-5. Stylesheet Rules (Script H)
+
+@keyframes, @font-face, CSS-in-JS 규칙 추출:
+
+```
+evaluate_script({ function: stylesheetRulesFn })
+```
+
+- @keyframes: 애니메이션 이름, 프레임별 속성, cssText
+- @font-face: fontFamily, src (woff2 URL), fontWeight, fontDisplay
+- CSS-in-JS: styled-components, emotion, JSS 마커 감지
+- CORS 차단 시트 수 기록
+
+### 2-6. Interaction States (Script I)
+
+hover/active/focus 인터랙션 스타일 추출:
+
+```
+evaluate_script({ function: interactionStateFn })
+```
+
+- CSS 규칙에서 :hover/:active/:focus/:focus-visible 선택자 파싱
+- 각 인터랙티브 요소의 기본 상태 + 인터랙션 속성 매칭
+- transition 속성 감지 (duration, timing-function)
+- `@media (hover: hover)` 블록 내부 규칙 수집
+
+### 2-7. Width Chain (Script F)
 
 타겟 요소 → body까지 width/maxWidth/padding 역추적:
 
@@ -98,15 +169,7 @@ evaluate_script({ function: authoredCSSFn })
 evaluate_script({ function: widthChainFn })
 ```
 
-### 2-4. Asset Analysis (Script E)
-
-이미지, SVG, 폰트, CSS 변수 수집:
-
-```
-evaluate_script({ function: assetAnalysisFn })
-```
-
-### 2-5. 섹션별 스크린샷
+### 2-8. 섹션별 스크린샷
 
 각 주요 섹션에 대해 scrollIntoView + screenshot 패턴 적용:
 
@@ -121,7 +184,7 @@ evaluate_script({ function: "() => {
 take_screenshot({ filePath: "$output/screenshots/section-name.png" })
 ```
 
-### 2-6. 미디어 쿼리 추출
+### 2-9. 미디어 쿼리 추출
 
 ```javascript
 evaluate_script({ function: `() => {
@@ -189,34 +252,124 @@ Phase 2에서 수집한 authored와 computed를 비교:
 | `reference` | 원본 URL 그대로 사용 |
 | `placeholder` | 동일 크기의 플레이스홀더 이미지 생성 |
 
+### 3-E. Head 리소스 전략
+
+Script G 결과를 기반으로 `<head>` 리소스 처리:
+
+| 리소스 | 처리 |
+|--------|------|
+| CDN CSS (Next.js 번들 등) | `<link rel="stylesheet">` 태그로 포함 |
+| preconnect/preload | 그대로 포함 (로드 성능 유지) |
+| favicon | assets 모드에 따라 다운로드 or 원본 URL 참조 |
+| OG/Twitter meta | 그대로 포함 |
+| 인라인 `<style>` | 내용이 필요한 경우 styles.css에 병합 |
+
+### 3-F. Animation/Font 전략
+
+Script H 결과를 기반으로 처리:
+
+| 항목 | 처리 |
+|------|------|
+| @keyframes | cssText 그대로 styles.css 상단에 포함 |
+| @font-face | styles.css 최상단에 포함, woff2 파일은 assets 모드에 따라 다운로드 |
+| CSS-in-JS (styled-components/emotion) | styles.css에 인라인 (프레임워크 종속 제거) |
+| CORS 차단 시트 | 원본 CDN `<link>` 태그로 직접 참조 |
+
+### 3-G. 인터랙션 전략
+
+Script I 결과를 기반으로 처리:
+
+| 항목 | 처리 |
+|------|------|
+| :hover 규칙 | CSS에 선택자 + 속성 그대로 포함 |
+| :active/:focus 규칙 | CSS에 포함 |
+| :focus-visible 규칙 | CSS에 포함 (접근성 유지) |
+| transition 속성 | 기본 스타일에 transition 속성 포함 |
+| @media (hover: hover) | 미디어 쿼리 블록으로 포함 |
+| 복합 선택자 (.btn:hover .icon) | 원본 선택자 구조 보존 |
+
 ---
 
 ## Phase 4: GENERATE (코드 생성)
 
-### 4-1. HTML 생성
+### 4-1. HTML `<head>` 생성
+
+Script G 결과를 기반으로 `<head>` 구성:
+
+```html
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cloned from [URL]</title>
+  <!-- Script G: CDN CSS -->
+  <link rel="preconnect" href="...">
+  <link rel="stylesheet" href="...">
+  <!-- Script G: favicon -->
+  <link rel="icon" href="assets/icons/favicon.ico">
+  <!-- Script G: OG/Twitter meta -->
+  <meta property="og:image" content="...">
+  <!-- 자체 CSS -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+```
+
+### 4-2. HTML `<body>` 생성
 
 Phase 3의 판단을 기반으로 HTML 작성:
 - 원본 구조 유지 또는 시맨틱 재구성
 - 변형 분류 결과 반영 (반복 요소 → 컴포넌트화)
 - 에셋 모드 반영
+- `<video>`, `<iframe>` 속성 보존 (Script E 확장)
 
-### 4-2. CSS 생성
+### 4-3. CSS 생성
 
 ```css
 /* ============================================
    [Component] - Cloned from [URL]
    ============================================ */
 
-/* CSS Variables */
+/* 1. @font-face (Script H) */
+@font-face {
+  font-family: '...';
+  src: url('assets/fonts/...woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 2. @keyframes (Script H) */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 3. CSS Variables (Script E) */
 :root {
   /* Phase 2에서 추출한 CSS 변수 */
 }
 
-/* Component Styles */
+/* 4. Reset & Base */
+
+/* 5. Component Styles (Script B + C) */
 /* Authored 값 우선, fallback으로 computed */
 
-/* Responsive */
-/* Phase 2에서 추출한 미디어 쿼리 */
+/* 6. Pseudo-elements (Script B2) */
+.element::before {
+  content: "";
+  /* 추출된 pseudo-element 스타일 */
+}
+
+/* 7. Interaction States (Script I) */
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+}
+.feature-card:hover {
+  box-shadow: ...;
+  transform: ...;
+}
+
+/* 8. Responsive */
+@media (hover: hover) { /* Script I hover media 규칙 */ }
+@media (max-width: 768px) { /* Phase 2 미디어 쿼리 */ }
 ```
 
 우선순위 규칙:
@@ -224,7 +377,7 @@ Phase 3의 판단을 기반으로 HTML 작성:
 2. **computed 값** (px) → 고정 크기
 3. **CSS 변수** → 원본과 동일한 변수명 사용
 
-### 4-3. 에셋 다운로드
+### 4-4. 에셋 다운로드
 
 `assets: download` 모드일 때:
 
@@ -235,17 +388,18 @@ curl -sL "https://example.com/image.png" -o "$output/assets/images/image.png"
 
 SVG는 outerHTML에서 직접 추출하여 파일로 저장.
 
-### 4-4. 출력 구조
+### 4-5. 출력 구조
 
 #### Vanilla (기본)
 ```
 $output/
-├── index.html
-├── styles.css
-├── scripts.js          # 인터랙션 (있는 경우)
+├── index.html          # <head> 리소스 포함
+├── styles.css          # @font-face, @keyframes, :hover 포함
+├── scripts.js          # 드롭다운, 모바일 메뉴 등 인터랙션
 ├── assets/
-│   ├── images/         # 다운로드된 이미지
-│   └── icons/          # 추출된 SVG
+│   ├── images/         # 다운로드된 이미지 (PNG, JPG, 배경 SVG)
+│   ├── icons/          # 아이콘 SVG, favicon
+│   └── fonts/          # woff2 웹폰트 파일 [NEW]
 ├── screenshots/        # 원본 + 클론 비교용
 │   ├── full-page.png
 │   ├── original-*.png
@@ -408,19 +562,21 @@ Phase 1~4만 실행, Phase 5 (VERIFY) 건너뛰기:
 ### precise 모드 (기본)
 
 전체 5단계 실행:
-- 모든 스크립트 (A~F) 실행
+- 모든 스크립트 (A~I, B2) 실행
 - authored vs computed 비교
 - 패턴 분류 + 변형 처리
+- Head 리소스 + @font-face/@keyframes + 인터랙션 상태 포함
+- ::before/::after pseudo-element 보존
 - 듀얼 페이지 수치 검증 루프 (최대 3회)
 - 검증 보고서 생성
 
 ---
 
-## 체크리스트 (15항목)
+## 체크리스트 (22항목)
 
 클론 완료 후 자동 검증:
 
-### 필수 (8항목 — 기존)
+### 필수 (8항목 — 기본)
 - [ ] 컨테이너 크기/패딩 일치
 - [ ] border-radius 값 정확히 일치
 - [ ] box-shadow 값 정확히 일치
@@ -430,7 +586,7 @@ Phase 1~4만 실행, Phase 5 (VERIFY) 건너뛰기:
 - [ ] 반응형 breakpoints 작동
 - [ ] 다크모드 지원 (해당 시)
 
-### 추가 (7항목 — v2 신규)
+### v2 기본 (7항목)
 - [ ] authored CSS 값 사용 (auto, %, flex → authored 우선)
 - [ ] 형제 요소 간격 일치 (gap, margin 기반)
 - [ ] 너비 체인 정확성 (maxWidth → padding → content)
@@ -438,6 +594,15 @@ Phase 1~4만 실행, Phase 5 (VERIFY) 건너뛰기:
 - [ ] 패턴 변형 올바르게 분류 (text-top vs image-top vs horizontal)
 - [ ] 듀얼 페이지 수치 비교 통과 (오차 ≤ 3px)
 - [ ] 에셋 다운로드/참조/플레이스홀더 올바르게 처리
+
+### v2 확장 (7항목 — NEW)
+- [ ] CDN 스타일시트가 `<head>`에 포함 (Script G)
+- [ ] 웹폰트 (@font-face) 로드 확인 (Script H)
+- [ ] @keyframes 애니메이션 정상 재생 (Script H)
+- [ ] ::before/::after 의사 요소 보존 (Script B2)
+- [ ] :hover 스타일 변화 정확 재현 (Script I)
+- [ ] :focus/:active 상태 정확 재현 (Script I)
+- [ ] `<video>`/`<iframe>` 요소 속성 보존 (Script E 확장)
 
 ---
 
@@ -449,49 +614,10 @@ Phase 2 (MEASURE)에서 Script E가 자동으로 수집합니다. 추출된 변�
 
 ## 인터랙션 추출
 
-hover/active/focus 상태의 스타일 차이를 감지하려면:
-
-```javascript
-// DevTools를 통한 hover 상태 CSS 변화 추출
-evaluate_script({ function: `() => {
-  const el = document.querySelector('__SELECTOR__');
-  if (!el) return { error: 'not found' };
-
-  // 1. 기본 상태 측정
-  const base = window.getComputedStyle(el);
-  const baseStyles = {
-    transform: base.transform,
-    boxShadow: base.boxShadow,
-    backgroundColor: base.backgroundColor,
-    color: base.color,
-    borderColor: base.borderColor,
-    opacity: base.opacity,
-    textDecoration: base.textDecoration,
-    outline: base.outline
-  };
-
-  // 2. CSS 규칙에서 :hover 선택자 찾기
-  const hoverRules = {};
-  for (const sheet of document.styleSheets) {
-    try {
-      for (const rule of sheet.cssRules) {
-        if (rule.selectorText && rule.selectorText.includes(':hover')) {
-          try {
-            const baseSelector = rule.selectorText.replace(/:hover/g, '');
-            if (el.matches(baseSelector) || el.closest(baseSelector)) {
-              for (const prop of rule.style) {
-                hoverRules[prop] = rule.style.getPropertyValue(prop);
-              }
-            }
-          } catch(e) {}
-        }
-      }
-    } catch(e) { /* CORS */ }
-  }
-
-  return { baseStyles, hoverRules };
-}` })
-```
+> **참고**: 인터랙션 추출은 Phase 2의 **Script I (interactionStateFn)**가 자동으로 처리합니다.
+> Script I는 모든 인터랙티브 요소에 대해 :hover/:active/:focus/:focus-visible 규칙을 CSS 시트에서 파싱하고,
+> transition 속성과 `@media (hover: hover)` 블록까지 수집합니다.
+> 별도의 수동 추출 스크립트는 필요하지 않습니다.
 
 ---
 
