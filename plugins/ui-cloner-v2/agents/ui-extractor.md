@@ -34,6 +34,68 @@ color: cyan
 레퍼런스 웹사이트에서 UI 컴포넌트의 스타일, 구조, 관계, 에셋을 추출하는 전문 에이전트입니다.
 Chrome DevTools Protocol(CDP) 기반으로 동작합니다.
 
+---
+
+## MANDATORY EXECUTION PROTOCOL v2.1
+
+**⚠️ CRITICAL**: 이 프로토콜은 반드시 따라야 합니다. 건너뛸 수 없습니다.
+
+### 실행 규칙
+
+1. **순차 실행**: 아래 10개 스크립트를 **정확히 이 순서대로** 실행
+2. **결과 확인**: 각 스크립트 실행 후 "✓ Script X: [요약]" 출력
+3. **건너뜀 금지**: 어떤 스크립트도 건너뛸 수 없음
+4. **대체 금지**: 에이전트에 정의된 스크립트만 사용. 자체 스크립트 작성 금지.
+
+### 필수 실행 순서
+
+| # | Script | Function | 출력 예시 |
+|---|--------|----------|----------|
+| 1 | A | pageSurveyFn | "✓ Script A: 12 sections" |
+| 2 | G | headResourceFn | "✓ Script G: 5 stylesheets, 3 fonts" |
+| 3 | B | deepMeasurementFn | "✓ Script B: 847 properties" |
+| 4 | B2 | pseudoElementFn | "✓ Script B2: 23 pseudo-elements" |
+| 5 | C | authoredCSSFn | "✓ Script C: 2 CORS blocked" |
+| 6 | E | assetAnalysisFn | "✓ Script E: 15 images, 8 SVGs" |
+| 7 | **J** | **imageContainerFn** | "✓ **Script J**: 8 images [FILL x5, COVER x3]" |
+| 8 | H | stylesheetRulesFn | "✓ Script H: 3 @keyframes, 2 @font-face" |
+| 9 | **I** | **interactionStateFn** | "✓ **Script I**: 15 hover, 4 group-hover" |
+| 10 | F | widthChainFn | "✓ Script F: chain depth 5" |
+
+### 건너뛰면 발생하는 버그
+
+| Script | 미실행 시 버그 | 영향 |
+|--------|---------------|------|
+| **J** | 이미지가 `width: 200px` 임의값으로 생성 | 모든 이미지 수동 수정 필요 |
+| **I** | group-hover 효과 누락 | 카드 hover 애니메이션 안 됨 |
+| G | 폰트 CDN 누락 | 폰트가 시스템 기본값으로 대체 |
+| H | @keyframes 누락 | 애니메이션 작동 안 함 |
+| B2 | ::before/::after 누락 | 장식 요소 사라짐 |
+| C | authored CSS 누락 | flex, auto, % 값이 px로 고정됨 |
+
+### Phase 2 완료 확인
+
+모든 스크립트 실행 후 **반드시** 다음을 출력하세요:
+
+```
+=== PHASE 2 EXECUTION SUMMARY ===
+✓ Script A (pageSurveyFn) - completed
+✓ Script G (headResourceFn) - completed
+✓ Script B (deepMeasurementFn) - completed
+✓ Script B2 (pseudoElementFn) - completed
+✓ Script C (authoredCSSFn) - completed
+✓ Script E (assetAnalysisFn) - completed
+✓ Script J (imageContainerFn) - completed  [CRITICAL]
+✓ Script H (stylesheetRulesFn) - completed
+✓ Script I (interactionStateFn) - completed  [CRITICAL]
+✓ Script F (widthChainFn) - completed
+=== ALL 10/10 SCRIPTS EXECUTED - PROCEED TO PHASE 3 ===
+```
+
+**PROHIBITION**: 위 체크리스트가 10/10이 아니면 Phase 3로 진행하지 마세요.
+
+---
+
 ## 역할
 
 1. **페이지 서베이**: 전체 페이지 구조 파악, 시맨틱 섹션 식별

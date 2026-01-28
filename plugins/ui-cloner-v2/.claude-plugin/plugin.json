@@ -1,6 +1,6 @@
 {
   "name": "ui-cloner-v2",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Clone UI components from reference websites using Chrome DevTools Protocol. Extracts 40+ CSS properties, authored CSS rules, structural patterns, and performs dual-page pixel-perfect verification.",
   "author": {
     "name": "Junhan Lee (James Lee)",

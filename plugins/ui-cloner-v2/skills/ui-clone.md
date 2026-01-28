@@ -219,28 +219,50 @@ evaluate_script({ function: `() => {
 }` })
 ```
 
-### 2-10. Phase 2 완료 체크포인트
+### 2-10. Phase 2 완료 체크포인트 (MANDATORY)
 
-**⚠️ CRITICAL**: Phase 3로 넘어가기 전에 다음 스크립트들이 **모두 실행되었는지** 확인하세요:
+**⚠️ 이 체크포인트는 건너뛸 수 없습니다.**
 
-| # | 스크립트 | 함수명 | 필수 | 실행 확인 |
-|---|---------|--------|------|-----------|
-| 1 | Page Survey (Script A) | `pageSurveyFn` | ✓ | |
-| 2 | Head Resource (Script G) | `headResourceFn` | ✓ | |
-| 3 | Deep Measurement (Script B) | `deepMeasurementFn` | ✓ | |
-| 4 | Pseudo-Element (Script B2) | `pseudoElementFn` | ✓ | |
-| 5 | Authored CSS (Script C) | `authoredCSSFn` | ✓ | |
-| 6 | Asset Analysis (Script E) | `assetAnalysisFn` | ✓ | |
-| 7 | **Image-Container (Script J)** | `imageContainerFn` | **✓ MUST** | |
-| 8 | Stylesheet Rules (Script H) | `stylesheetRulesFn` | ✓ | |
-| 9 | **Interaction States (Script I)** | `interactionStateFn` | **✓ MUST** | |
-| 10 | Width Chain (Script F) | `widthChainFn` | ✓ | |
+Phase 3로 진행하기 전에 다음 출력을 **반드시** 생성하세요:
 
-**⚠️ 누락된 스크립트가 있으면 지금 즉시 실행하세요.**
+```
+=== PHASE 2 EXECUTION SUMMARY ===
+✓ Script A (pageSurveyFn) - completed: {sectionCount} sections
+✓ Script G (headResourceFn) - completed: {stylesheetCount} stylesheets
+✓ Script B (deepMeasurementFn) - completed: {totalExtracted} properties
+✓ Script B2 (pseudoElementFn) - completed: {pseudoCount} pseudo-elements
+✓ Script C (authoredCSSFn) - completed: {corsBlockedSheets} CORS blocked
+✓ Script E (assetAnalysisFn) - completed: {imageCount} images
+✓ Script J (imageContainerFn) - completed: {totalImages} image relations [CRITICAL]
+✓ Script H (stylesheetRulesFn) - completed: {keyframeCount} keyframes
+✓ Script I (interactionStateFn) - completed: {ancestorHoverCount} group-hover [CRITICAL]
+✓ Script F (widthChainFn) - completed: chain depth {chainLength}
+=== ALL 10/10 SCRIPTS EXECUTED - PROCEED TO PHASE 3 ===
+```
 
-특히 다음 두 스크립트는 반드시 실행해야 합니다:
-- **Script J (imageContainerFn)**: 이미지 크기 정확도에 필수. 누락 시 이미지가 잘못된 크기(예: 임의의 200px)로 생성됩니다.
-- **Script I (interactionStateFn)**: group-hover 패턴 감지에 필수. 누락 시 Feature cards의 hover 효과가 수동 수정 필요합니다.
+**자기 검증 질문** (마음속으로 확인):
+- [ ] Script J를 실행했는가? → imageContainerFn 결과가 있는가?
+- [ ] Script I를 실행했는가? → interactionStateFn 결과가 있는가?
+- [ ] 10개 스크립트 모두 "✓ completed" 상태인가?
+
+**하나라도 "아니오"면**: Phase 3로 진행하지 말고 누락된 스크립트를 실행하세요.
+
+### 스크립트 실행 테이블
+
+| # | 스크립트 | 함수명 | 필수 | 미실행 시 버그 |
+|---|---------|--------|------|----------------|
+| 1 | Page Survey (Script A) | `pageSurveyFn` | ✓ | 섹션 식별 불가 |
+| 2 | Head Resource (Script G) | `headResourceFn` | ✓ | 폰트가 시스템 기본값으로 대체 |
+| 3 | Deep Measurement (Script B) | `deepMeasurementFn` | ✓ | 스타일 추출 불가 |
+| 4 | Pseudo-Element (Script B2) | `pseudoElementFn` | ✓ | ::before/::after 장식 누락 |
+| 5 | Authored CSS (Script C) | `authoredCSSFn` | ✓ | flex, auto, % 값이 px 고정 |
+| 6 | Asset Analysis (Script E) | `assetAnalysisFn` | ✓ | 이미지/SVG 목록 누락 |
+| 7 | **Image-Container (Script J)** | `imageContainerFn` | **✓ MUST** | **이미지가 임의 200px로 생성** |
+| 8 | Stylesheet Rules (Script H) | `stylesheetRulesFn` | ✓ | @keyframes 애니메이션 안 됨 |
+| 9 | **Interaction States (Script I)** | `interactionStateFn` | **✓ MUST** | **group-hover 효과 누락** |
+| 10 | Width Chain (Script F) | `widthChainFn` | ✓ | 컨테이너 너비 계산 오류 |
+
+**PROHIBITION**: 위 체크리스트가 10/10이 아니면 Phase 3로 진행하지 마세요.
 
 ---
 

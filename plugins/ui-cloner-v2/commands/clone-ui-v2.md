@@ -71,9 +71,10 @@ arguments:
 
 ### Step 3: 5단계 파이프라인 실행
 
-**⚠️ CRITICAL: UI Extractor 에이전트 사용 필수**
+**⚠️ MANDATORY EXECUTION PROTOCOL**
 
 반드시 **UI Extractor 에이전트** (`agents/ui-extractor.md`)를 delegation하여 실행하세요.
+에이전트의 **MANDATORY EXECUTION PROTOCOL v2.1**을 따르세요.
 
 에이전트에는 검증된 13개 스크립트가 정의되어 있습니다:
 - `pageSurveyFn` (Script A) — 페이지 구조 파악
@@ -81,14 +82,32 @@ arguments:
 - `deepMeasurementFn` (Script B) — 40+ CSS 속성 추출
 - `pseudoElementFn` (Script B2) — ::before/::after
 - `authoredCSSFn` (Script C) — auto, %, flex 원본값
-- `assetAnalysisFn` (Script D) — 이미지, SVG, video
+- `assetAnalysisFn` (Script E) — 이미지, SVG, video
 - `imageContainerFn` (Script J) — 이미지-컨테이너 관계, sizingStrategy
 - `stylesheetRulesFn` (Script H) — @keyframes, @font-face
 - `interactionStateFn` (Script I) — hover, group-hover, ancestorHoverPatterns
 - `widthChainFn` (Script F) — 너비 체인 분석
-- `patternRecognitionFn` (Script E) — 패턴 인식
+- `patternRecognitionFn` (Script D) — 패턴 인식
 
 **🚫 절대 자체 스크립트를 작성하지 마세요.** 에이전트의 검증된 스크립트를 사용해야만 정확한 클론이 가능합니다.
+
+**핵심 규칙**:
+1. 10개 스크립트를 **순서대로 모두** 실행
+2. 각 스크립트 실행 후 "✓ Script X: [요약]" 출력
+3. **10/10 완료 확인 후에만** Phase 3 진행
+
+**Phase 전환 조건**:
+
+| 전환 | 조건 | 미충족 시 |
+|------|------|----------|
+| Phase 2 → 3 | "=== ALL 10/10 SCRIPTS EXECUTED ===" 출력됨 | 누락 스크립트 실행 |
+| Phase 3 → 4 | 분석 전략 문서화됨 | 재분석 |
+| Phase 4 → 5 | HTML/CSS 파일 생성됨 | 재생성 |
+
+**절대 금지 사항**:
+- 스크립트 건너뛰기
+- 자체 스크립트 작성
+- 결과 확인 없이 Phase 전환
 
 ---
 
