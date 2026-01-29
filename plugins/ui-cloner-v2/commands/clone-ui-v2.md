@@ -111,6 +111,32 @@ arguments:
 
 ---
 
+### 클론 범위 규칙 (v2.2)
+
+**⚠️ MANDATORY**: 전체 페이지의 **모든 섹션**을 클론하세요.
+
+| 규칙 | 설명 |
+|------|------|
+| 전체 포함 | pageSurvey에서 감지된 **모든** 섹션 포함 |
+| 자체 제한 금지 | "core sections only" 같은 자체 제한 금지 |
+| 섹션 수 검증 | 섹션 수가 10개 미만이면 pageSurvey 재스캔 |
+
+**금지 사항**:
+- ❌ 특정 섹션만 선택하여 클론
+- ❌ "주요 섹션만" 클론
+- ❌ 원본보다 적은 섹션으로 결정
+- ❌ "Best for", "Building Blocks", "Comparison", "Case Study" 등 누락
+
+### 폰트 적용 순서 (v2.2)
+
+1. **headResource의 Google Fonts/CDN 링크** → `<head>`에 그대로 포함 (최우선)
+2. **@font-face 선언** (Script H) → woff2 다운로드 후 적용
+3. **computed fontFamily** → fallback으로만 사용
+
+⚠️ 원본 사이트의 폰트 CDN `<link>` 태그를 반드시 포함하세요.
+
+---
+
 quality 모드에 따라 실행 범위가 다릅니다.
 
 #### precise 모드 (기본)

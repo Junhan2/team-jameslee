@@ -96,6 +96,44 @@ Chrome DevTools Protocol(CDP) 기반으로 동작합니다.
 
 ---
 
+## 전체 페이지 클론 강제 규칙 (v2.2)
+
+**⚠️ MANDATORY**: 페이지의 **모든 섹션**을 클론하세요. 일부만 선택하지 마세요.
+
+### 클론 범위 규칙
+
+1. **pageSurvey에서 감지된 모든 섹션 포함**
+   - 섹션 수가 원본보다 적으면 다시 스캔
+   - "core sections only" 같은 자체 제한 금지
+
+2. **섹션 수 검증**
+   - pageSurvey.sectionCount ≥ 5 이면 모두 포함
+   - 섹션이 10개 이상이면 **반드시** 10개 이상 클론
+
+3. **금지 사항**
+   - ❌ "주요 섹션만" 클론
+   - ❌ 특정 섹션 임의 제외
+   - ❌ 원본보다 적은 섹션으로 결정
+   - ❌ "시간 절약을 위해" 섹션 생략
+
+### 폰트 적용 순서 (v2.2)
+
+1. **headResource에서 감지된 Google Fonts/CDN 폰트 링크** → `<head>`에 그대로 포함
+2. **@font-face 선언** (Script H) → woff2 다운로드 후 적용
+3. **computed fontFamily** → fallback으로만 사용
+
+⚠️ **원본 사이트의 폰트 CDN 링크를 반드시 `<head>`에 포함하세요.**
+
+예시:
+```html
+<!-- 원본 사이트가 Google Fonts 사용 시 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+```
+
+---
+
 ## 역할
 
 1. **페이지 서베이**: 전체 페이지 구조 파악, 시맨틱 섹션 식별
@@ -181,28 +219,48 @@ new_page({ url: targetUrl })
 
 ### Step 2: Page Survey (전체 구조 파악)
 
-**Script A: Page Survey**
+**Script A: Page Survey (Enhanced v2.2)**
 
 ```
 evaluate_script({ function: pageSurveyFn })
 ```
 
 ```javascript
-// pageSurveyFn
+// pageSurveyFn v2.2 — 더 포괄적인 섹션 감지
 const pageSurveyFn = `() => {
   const sections = [];
-  const candidates = document.querySelectorAll(
+  const seen = new Set();
+
+  // 1단계: 시맨틱 태그 + ARIA role 수집
+  const semanticCandidates = document.querySelectorAll(
     'header, nav, main, section, article, aside, footer, ' +
     '[role="banner"], [role="navigation"], [role="main"], [role="contentinfo"], ' +
-    '.hero, .section, .container, .wrapper'
+    '.hero, .section, .container, .wrapper, [class*="section"], [class*="Section"]'
   );
 
-  candidates.forEach((el, i) => {
-    const rect = el.getBoundingClientRect();
-    if (rect.height < 10) return;
+  // 2단계: body/main 직접 자식 중 높이가 큰 요소 수집 (scrollHeight 기반)
+  const bodyChildren = document.querySelectorAll('body > div, body > section, body > main, main > div, main > section');
 
+  // 3단계: 모든 후보 통합 (중복 제거)
+  const allCandidates = new Set([...semanticCandidates, ...bodyChildren]);
+
+  allCandidates.forEach((el) => {
+    // 이미 처리된 요소 건너뛰기
+    if (seen.has(el)) return;
+
+    const rect = el.getBoundingClientRect();
+    // 높이 100px 이상인 요소만 (v2.2: 임계값 100px로 상향)
+    if (rect.height < 100) return;
+
+    // 화면 너비의 50% 이상 차지하는 요소만
+    const viewportWidth = window.innerWidth;
+    if (rect.width < viewportWidth * 0.5) return;
+
+    seen.add(el);
     const computed = window.getComputedStyle(el);
-    const imgs = Array.from(el.querySelectorAll('img')).map(img => ({
+
+    // 이미지 수집 (최대 20개)
+    const imgs = Array.from(el.querySelectorAll('img')).slice(0, 20).map(img => ({
       src: img.src,
       alt: img.alt,
       width: img.naturalWidth,
@@ -211,14 +269,25 @@ const pageSurveyFn = `() => {
     const svgs = el.querySelectorAll('svg').length;
     const links = el.querySelectorAll('a').length;
 
+    // 섹션 이름 추론 (class, id, aria-label, data-section 등)
+    const sectionName = el.getAttribute('aria-label') ||
+                        el.getAttribute('data-section') ||
+                        el.id ||
+                        Array.from(el.classList).find(c =>
+                          /hero|feature|pricing|testimonial|faq|cta|footer|header|nav|about|contact|case|comparison|building|best/i.test(c)
+                        ) ||
+                        (el.querySelector('h1, h2, h3')?.textContent?.trim().substring(0, 50)) ||
+                        null;
+
     sections.push({
-      index: i,
+      index: sections.length,
       tag: el.tagName.toLowerCase(),
       id: el.id || null,
       classes: Array.from(el.classList),
       role: el.getAttribute('role') || null,
+      sectionName: sectionName,
       rect: {
-        top: Math.round(rect.top),
+        top: Math.round(rect.top + window.scrollY),
         left: Math.round(rect.left),
         width: Math.round(rect.width),
         height: Math.round(rect.height)
@@ -232,19 +301,26 @@ const pageSurveyFn = `() => {
         overflow: computed.overflow
       },
       childCount: el.children.length,
-      images: imgs.slice(0, 10),
+      images: imgs,
       svgCount: svgs,
       linkCount: links,
       textPreview: el.textContent?.trim().substring(0, 150) || ''
     });
   });
 
+  // 섹션을 top 위치 기준으로 정렬
+  sections.sort((a, b) => a.rect.top - b.rect.top);
+
+  // 인덱스 재할당
+  sections.forEach((s, i) => s.index = i);
+
   return {
     pageTitle: document.title,
     pageWidth: document.documentElement.clientWidth,
     pageHeight: document.documentElement.scrollHeight,
     sectionCount: sections.length,
-    sections: sections
+    sections: sections,
+    _v2_2_enhanced: true
   };
 }`;
 ```

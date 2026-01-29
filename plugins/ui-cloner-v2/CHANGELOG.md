@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-01-29
+
+### Added
+- **Enhanced pageSurvey script (v2.2)** in ui-extractor agent
+  - Body/main direct children scanning for comprehensive section detection
+  - Height threshold increased to 100px for major sections only
+  - Viewport width ratio check (≥50%) for main content areas
+  - Section name inference from aria-label, data-section, id, class, headings
+  - Automatic sorting by top position
+- **Full page clone enforcement rules** in all three files
+  - Mandatory inclusion of ALL detected sections
+  - Prohibition of "core sections only" self-limitation
+  - Section count validation (≥10 when original has 10+)
+- **Font application priority order (v2.2)**
+  - Priority 1: Google Fonts/CDN links from headResource → direct `<head>` inclusion
+  - Priority 2: @font-face declarations from Script H → woff2 download
+  - Priority 3: computed fontFamily → fallback only
+- Section count verification table in skills/ui-clone.md
+
+### Changed
+- pageSurveyFn now returns `_v2_2_enhanced: true` flag
+- Increased image collection limit from 10 to 20 per section
+- Added `sectionName` field to pageSurvey results
+
+### Fixed
+- Issue where only 5 sections were detected when original had 10+ sections
+- Issue where fonts were incorrectly applied (Space Grotesk instead of Inter)
+- Issue where "Best for", "Building Blocks", "Comparison", "Case Study" sections were omitted
+
 ## [2.1.0] - 2026-01-28
 
 ### Added
