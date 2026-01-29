@@ -64,21 +64,6 @@ evaluate_script({ function: pageSurveyFn })
 - 이미지/SVG/링크 수 파악
 - 타겟 섹션의 정확한 CSS 선택자 결정
 
-### 섹션 수 검증 (v2.2)
-
-**⚠️ MANDATORY**: pageSurvey 결과의 sectionCount를 확인하세요.
-
-| 조건 | 조치 |
-|------|------|
-| sectionCount < 5 | 페이지가 단순하거나 감지 누락 → body 직접 자식 추가 스캔 |
-| sectionCount ≥ 10 | **모든 10개+ 섹션 클론 필수** |
-| 원본에 명확한 섹션이 더 있음 | pageSurvey 재실행 또는 수동 선택자 추가 |
-
-**금지 사항**:
-- ❌ "core sections only"로 자체 제한
-- ❌ 섹션 일부만 선택하여 클론
-- ❌ 원본보다 적은 섹션 수로 진행
-
 ### 1-3. Head 리소스 수집
 
 ```
@@ -234,50 +219,28 @@ evaluate_script({ function: `() => {
 }` })
 ```
 
-### 2-10. Phase 2 완료 체크포인트 (MANDATORY)
+### 2-10. Phase 2 완료 체크포인트
 
-**⚠️ 이 체크포인트는 건너뛸 수 없습니다.**
+**⚠️ CRITICAL**: Phase 3로 넘어가기 전에 다음 스크립트들이 **모두 실행되었는지** 확인하세요:
 
-Phase 3로 진행하기 전에 다음 출력을 **반드시** 생성하세요:
+| # | 스크립트 | 함수명 | 필수 | 실행 확인 |
+|---|---------|--------|------|-----------|
+| 1 | Page Survey (Script A) | `pageSurveyFn` | ✓ | |
+| 2 | Head Resource (Script G) | `headResourceFn` | ✓ | |
+| 3 | Deep Measurement (Script B) | `deepMeasurementFn` | ✓ | |
+| 4 | Pseudo-Element (Script B2) | `pseudoElementFn` | ✓ | |
+| 5 | Authored CSS (Script C) | `authoredCSSFn` | ✓ | |
+| 6 | Asset Analysis (Script E) | `assetAnalysisFn` | ✓ | |
+| 7 | **Image-Container (Script J)** | `imageContainerFn` | **✓ MUST** | |
+| 8 | Stylesheet Rules (Script H) | `stylesheetRulesFn` | ✓ | |
+| 9 | **Interaction States (Script I)** | `interactionStateFn` | **✓ MUST** | |
+| 10 | Width Chain (Script F) | `widthChainFn` | ✓ | |
 
-```
-=== PHASE 2 EXECUTION SUMMARY ===
-✓ Script A (pageSurveyFn) - completed: {sectionCount} sections
-✓ Script G (headResourceFn) - completed: {stylesheetCount} stylesheets
-✓ Script B (deepMeasurementFn) - completed: {totalExtracted} properties
-✓ Script B2 (pseudoElementFn) - completed: {pseudoCount} pseudo-elements
-✓ Script C (authoredCSSFn) - completed: {corsBlockedSheets} CORS blocked
-✓ Script E (assetAnalysisFn) - completed: {imageCount} images
-✓ Script J (imageContainerFn) - completed: {totalImages} image relations [CRITICAL]
-✓ Script H (stylesheetRulesFn) - completed: {keyframeCount} keyframes
-✓ Script I (interactionStateFn) - completed: {ancestorHoverCount} group-hover [CRITICAL]
-✓ Script F (widthChainFn) - completed: chain depth {chainLength}
-=== ALL 10/10 SCRIPTS EXECUTED - PROCEED TO PHASE 3 ===
-```
+**⚠️ 누락된 스크립트가 있으면 지금 즉시 실행하세요.**
 
-**자기 검증 질문** (마음속으로 확인):
-- [ ] Script J를 실행했는가? → imageContainerFn 결과가 있는가?
-- [ ] Script I를 실행했는가? → interactionStateFn 결과가 있는가?
-- [ ] 10개 스크립트 모두 "✓ completed" 상태인가?
-
-**하나라도 "아니오"면**: Phase 3로 진행하지 말고 누락된 스크립트를 실행하세요.
-
-### 스크립트 실행 테이블
-
-| # | 스크립트 | 함수명 | 필수 | 미실행 시 버그 |
-|---|---------|--------|------|----------------|
-| 1 | Page Survey (Script A) | `pageSurveyFn` | ✓ | 섹션 식별 불가 |
-| 2 | Head Resource (Script G) | `headResourceFn` | ✓ | 폰트가 시스템 기본값으로 대체 |
-| 3 | Deep Measurement (Script B) | `deepMeasurementFn` | ✓ | 스타일 추출 불가 |
-| 4 | Pseudo-Element (Script B2) | `pseudoElementFn` | ✓ | ::before/::after 장식 누락 |
-| 5 | Authored CSS (Script C) | `authoredCSSFn` | ✓ | flex, auto, % 값이 px 고정 |
-| 6 | Asset Analysis (Script E) | `assetAnalysisFn` | ✓ | 이미지/SVG 목록 누락 |
-| 7 | **Image-Container (Script J)** | `imageContainerFn` | **✓ MUST** | **이미지가 임의 200px로 생성** |
-| 8 | Stylesheet Rules (Script H) | `stylesheetRulesFn` | ✓ | @keyframes 애니메이션 안 됨 |
-| 9 | **Interaction States (Script I)** | `interactionStateFn` | **✓ MUST** | **group-hover 효과 누락** |
-| 10 | Width Chain (Script F) | `widthChainFn` | ✓ | 컨테이너 너비 계산 오류 |
-
-**PROHIBITION**: 위 체크리스트가 10/10이 아니면 Phase 3로 진행하지 마세요.
+특히 다음 두 스크립트는 반드시 실행해야 합니다:
+- **Script J (imageContainerFn)**: 이미지 크기 정확도에 필수. 누락 시 이미지가 잘못된 크기(예: 임의의 200px)로 생성됩니다.
+- **Script I (interactionStateFn)**: group-hover 패턴 감지에 필수. 누락 시 Feature cards의 hover 효과가 수동 수정 필요합니다.
 
 ---
 
@@ -340,33 +303,6 @@ Script G 결과를 기반으로 `<head>` 리소스 처리:
 | favicon | assets 모드에 따라 다운로드 or 원본 URL 참조 |
 | OG/Twitter meta | 그대로 포함 |
 | 인라인 `<style>` | 내용이 필요한 경우 styles.css에 병합 |
-
-### 3-E-2. 폰트 적용 순서 (v2.2 CRITICAL)
-
-**⚠️ MANDATORY**: 폰트는 다음 순서로 적용하세요. 순서를 바꾸지 마세요.
-
-| 우선순위 | 소스 | 적용 방법 |
-|---------|------|----------|
-| **1순위** | headResource의 Google Fonts/CDN 링크 | `<head>`에 `<link>` 태그 그대로 포함 |
-| **2순위** | @font-face 선언 (Script H) | styles.css 최상단에 포함, woff2 다운로드 |
-| **3순위** | computed fontFamily | fallback으로만 사용 |
-
-**필수 포함 예시**:
-```html
-<head>
-  <!-- 1순위: 원본 사이트의 폰트 CDN 링크 (Script G에서 추출) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <!-- 자체 CSS -->
-  <link rel="stylesheet" href="styles.css">
-</head>
-```
-
-**금지 사항**:
-- ❌ 폰트 CDN 링크 누락
-- ❌ 임의로 다른 폰트(Space Grotesk, Lora 등) 사용
-- ❌ computed fontFamily만 사용하고 CDN 링크 생략
 
 ### 3-F. Animation/Font 전략
 

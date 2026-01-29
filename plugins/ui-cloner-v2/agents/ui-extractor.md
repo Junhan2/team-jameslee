@@ -34,106 +34,6 @@ color: cyan
 레퍼런스 웹사이트에서 UI 컴포넌트의 스타일, 구조, 관계, 에셋을 추출하는 전문 에이전트입니다.
 Chrome DevTools Protocol(CDP) 기반으로 동작합니다.
 
----
-
-## MANDATORY EXECUTION PROTOCOL v2.1
-
-**⚠️ CRITICAL**: 이 프로토콜은 반드시 따라야 합니다. 건너뛸 수 없습니다.
-
-### 실행 규칙
-
-1. **순차 실행**: 아래 10개 스크립트를 **정확히 이 순서대로** 실행
-2. **결과 확인**: 각 스크립트 실행 후 "✓ Script X: [요약]" 출력
-3. **건너뜀 금지**: 어떤 스크립트도 건너뛸 수 없음
-4. **대체 금지**: 에이전트에 정의된 스크립트만 사용. 자체 스크립트 작성 금지.
-
-### 필수 실행 순서
-
-| # | Script | Function | 출력 예시 |
-|---|--------|----------|----------|
-| 1 | A | pageSurveyFn | "✓ Script A: 12 sections" |
-| 2 | G | headResourceFn | "✓ Script G: 5 stylesheets, 3 fonts" |
-| 3 | B | deepMeasurementFn | "✓ Script B: 847 properties" |
-| 4 | B2 | pseudoElementFn | "✓ Script B2: 23 pseudo-elements" |
-| 5 | C | authoredCSSFn | "✓ Script C: 2 CORS blocked" |
-| 6 | E | assetAnalysisFn | "✓ Script E: 15 images, 8 SVGs" |
-| 7 | **J** | **imageContainerFn** | "✓ **Script J**: 8 images [FILL x5, COVER x3]" |
-| 8 | H | stylesheetRulesFn | "✓ Script H: 3 @keyframes, 2 @font-face" |
-| 9 | **I** | **interactionStateFn** | "✓ **Script I**: 15 hover, 4 group-hover" |
-| 10 | F | widthChainFn | "✓ Script F: chain depth 5" |
-
-### 건너뛰면 발생하는 버그
-
-| Script | 미실행 시 버그 | 영향 |
-|--------|---------------|------|
-| **J** | 이미지가 `width: 200px` 임의값으로 생성 | 모든 이미지 수동 수정 필요 |
-| **I** | group-hover 효과 누락 | 카드 hover 애니메이션 안 됨 |
-| G | 폰트 CDN 누락 | 폰트가 시스템 기본값으로 대체 |
-| H | @keyframes 누락 | 애니메이션 작동 안 함 |
-| B2 | ::before/::after 누락 | 장식 요소 사라짐 |
-| C | authored CSS 누락 | flex, auto, % 값이 px로 고정됨 |
-
-### Phase 2 완료 확인
-
-모든 스크립트 실행 후 **반드시** 다음을 출력하세요:
-
-```
-=== PHASE 2 EXECUTION SUMMARY ===
-✓ Script A (pageSurveyFn) - completed
-✓ Script G (headResourceFn) - completed
-✓ Script B (deepMeasurementFn) - completed
-✓ Script B2 (pseudoElementFn) - completed
-✓ Script C (authoredCSSFn) - completed
-✓ Script E (assetAnalysisFn) - completed
-✓ Script J (imageContainerFn) - completed  [CRITICAL]
-✓ Script H (stylesheetRulesFn) - completed
-✓ Script I (interactionStateFn) - completed  [CRITICAL]
-✓ Script F (widthChainFn) - completed
-=== ALL 10/10 SCRIPTS EXECUTED - PROCEED TO PHASE 3 ===
-```
-
-**PROHIBITION**: 위 체크리스트가 10/10이 아니면 Phase 3로 진행하지 마세요.
-
----
-
-## 전체 페이지 클론 강제 규칙 (v2.2)
-
-**⚠️ MANDATORY**: 페이지의 **모든 섹션**을 클론하세요. 일부만 선택하지 마세요.
-
-### 클론 범위 규칙
-
-1. **pageSurvey에서 감지된 모든 섹션 포함**
-   - 섹션 수가 원본보다 적으면 다시 스캔
-   - "core sections only" 같은 자체 제한 금지
-
-2. **섹션 수 검증**
-   - pageSurvey.sectionCount ≥ 5 이면 모두 포함
-   - 섹션이 10개 이상이면 **반드시** 10개 이상 클론
-
-3. **금지 사항**
-   - ❌ "주요 섹션만" 클론
-   - ❌ 특정 섹션 임의 제외
-   - ❌ 원본보다 적은 섹션으로 결정
-   - ❌ "시간 절약을 위해" 섹션 생략
-
-### 폰트 적용 순서 (v2.2)
-
-1. **headResource에서 감지된 Google Fonts/CDN 폰트 링크** → `<head>`에 그대로 포함
-2. **@font-face 선언** (Script H) → woff2 다운로드 후 적용
-3. **computed fontFamily** → fallback으로만 사용
-
-⚠️ **원본 사이트의 폰트 CDN 링크를 반드시 `<head>`에 포함하세요.**
-
-예시:
-```html
-<!-- 원본 사이트가 Google Fonts 사용 시 -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-```
-
----
-
 ## 역할
 
 1. **페이지 서베이**: 전체 페이지 구조 파악, 시맨틱 섹션 식별
@@ -219,48 +119,28 @@ new_page({ url: targetUrl })
 
 ### Step 2: Page Survey (전체 구조 파악)
 
-**Script A: Page Survey (Enhanced v2.2)**
+**Script A: Page Survey**
 
 ```
 evaluate_script({ function: pageSurveyFn })
 ```
 
 ```javascript
-// pageSurveyFn v2.2 — 더 포괄적인 섹션 감지
+// pageSurveyFn
 const pageSurveyFn = `() => {
   const sections = [];
-  const seen = new Set();
-
-  // 1단계: 시맨틱 태그 + ARIA role 수집
-  const semanticCandidates = document.querySelectorAll(
+  const candidates = document.querySelectorAll(
     'header, nav, main, section, article, aside, footer, ' +
     '[role="banner"], [role="navigation"], [role="main"], [role="contentinfo"], ' +
-    '.hero, .section, .container, .wrapper, [class*="section"], [class*="Section"]'
+    '.hero, .section, .container, .wrapper'
   );
 
-  // 2단계: body/main 직접 자식 중 높이가 큰 요소 수집 (scrollHeight 기반)
-  const bodyChildren = document.querySelectorAll('body > div, body > section, body > main, main > div, main > section');
-
-  // 3단계: 모든 후보 통합 (중복 제거)
-  const allCandidates = new Set([...semanticCandidates, ...bodyChildren]);
-
-  allCandidates.forEach((el) => {
-    // 이미 처리된 요소 건너뛰기
-    if (seen.has(el)) return;
-
+  candidates.forEach((el, i) => {
     const rect = el.getBoundingClientRect();
-    // 높이 100px 이상인 요소만 (v2.2: 임계값 100px로 상향)
-    if (rect.height < 100) return;
+    if (rect.height < 10) return;
 
-    // 화면 너비의 50% 이상 차지하는 요소만
-    const viewportWidth = window.innerWidth;
-    if (rect.width < viewportWidth * 0.5) return;
-
-    seen.add(el);
     const computed = window.getComputedStyle(el);
-
-    // 이미지 수집 (최대 20개)
-    const imgs = Array.from(el.querySelectorAll('img')).slice(0, 20).map(img => ({
+    const imgs = Array.from(el.querySelectorAll('img')).map(img => ({
       src: img.src,
       alt: img.alt,
       width: img.naturalWidth,
@@ -269,25 +149,14 @@ const pageSurveyFn = `() => {
     const svgs = el.querySelectorAll('svg').length;
     const links = el.querySelectorAll('a').length;
 
-    // 섹션 이름 추론 (class, id, aria-label, data-section 등)
-    const sectionName = el.getAttribute('aria-label') ||
-                        el.getAttribute('data-section') ||
-                        el.id ||
-                        Array.from(el.classList).find(c =>
-                          /hero|feature|pricing|testimonial|faq|cta|footer|header|nav|about|contact|case|comparison|building|best/i.test(c)
-                        ) ||
-                        (el.querySelector('h1, h2, h3')?.textContent?.trim().substring(0, 50)) ||
-                        null;
-
     sections.push({
-      index: sections.length,
+      index: i,
       tag: el.tagName.toLowerCase(),
       id: el.id || null,
       classes: Array.from(el.classList),
       role: el.getAttribute('role') || null,
-      sectionName: sectionName,
       rect: {
-        top: Math.round(rect.top + window.scrollY),
+        top: Math.round(rect.top),
         left: Math.round(rect.left),
         width: Math.round(rect.width),
         height: Math.round(rect.height)
@@ -301,26 +170,19 @@ const pageSurveyFn = `() => {
         overflow: computed.overflow
       },
       childCount: el.children.length,
-      images: imgs,
+      images: imgs.slice(0, 10),
       svgCount: svgs,
       linkCount: links,
       textPreview: el.textContent?.trim().substring(0, 150) || ''
     });
   });
 
-  // 섹션을 top 위치 기준으로 정렬
-  sections.sort((a, b) => a.rect.top - b.rect.top);
-
-  // 인덱스 재할당
-  sections.forEach((s, i) => s.index = i);
-
   return {
     pageTitle: document.title,
     pageWidth: document.documentElement.clientWidth,
     pageHeight: document.documentElement.scrollHeight,
     sectionCount: sections.length,
-    sections: sections,
-    _v2_2_enhanced: true
+    sections: sections
   };
 }`;
 ```
