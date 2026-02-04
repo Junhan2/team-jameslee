@@ -112,6 +112,20 @@ Clone UI with Chrome DevTools Protocol. Extracts 40+ CSS properties, authored CS
 
 ---
 
+### 7. UI Cloner V3
+
+100% Perfect UI Clone with generalization-validated Tier system. Achieves 95%+ similarity on 80%+ of sites. CSS variables, z-index layers, Tailwind CSS auto-detection.
+
+**Commands:**
+| Command | Description |
+|---------|-------------|
+| `/clone-ui-v3` | 레퍼런스 사이트의 UI를 Chrome DevTools 기반으로 100% 완벽하게 클론합니다 |
+
+**Agents:**
+- `ui-extractor-v3` - 100% 완벽 클론을 목표로 하는 UI 추출 에이전트입니다
+
+---
+
 <!-- PLUGINS_END -->
 
 ## 📁 Structure
