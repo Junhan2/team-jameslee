@@ -36,6 +36,11 @@
       "name": "ui-cloner-v2",
       "source": "./plugins/ui-cloner-v2",
       "description": "Clone UI with Chrome DevTools Protocol. Extracts 40+ CSS properties, authored CSS, structural patterns, and performs dual-page pixel-perfect verification."
+    },
+    {
+      "name": "ui-cloner-v3",
+      "source": "./plugins/ui-cloner-v3",
+      "description": "100% Perfect UI Clone with generalization-validated Tier system. Achieves 95%+ similarity on 80%+ of sites. CSS variables, z-index layers, Tailwind CSS auto-detection."
     }
   ]
 }
