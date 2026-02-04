@@ -1,0 +1,4 @@
+{
+  "description": "100% 완벽 클론을 목표로 하는 UI 클로너 v3. 범용성 검증된 Tier 시스템으로 80%+ 사이트에서 95% 이상 유사도 달성. CSS 변수, z-index 계층, Tailwind CSS 자동 감지 지원.",
+  "source": "./plugins/ui-cloner-v3"
+}

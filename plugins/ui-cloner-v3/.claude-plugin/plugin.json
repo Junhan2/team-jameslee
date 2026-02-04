@@ -1,0 +1,24 @@
+{
+  "name": "ui-cloner-v3",
+  "version": "3.0.0",
+  "description": "100% Perfect UI Clone - Chrome DevTools Protocol 기반 완벽한 UI 복제. CSS 변수 완전 추출, z-index 계층 분석, Tailwind CSS 자동 감지, 범용성 검증된 Tier 시스템 적용.",
+  "author": {
+    "name": "Junhan Lee (James Lee)",
+    "email": "junhanlee91@gmail.com"
+  },
+  "homepage": "https://github.com/Junhan2/team-jameslee",
+  "repository": "https://github.com/Junhan2/team-jameslee",
+  "license": "MIT",
+  "keywords": [
+    "ui-clone",
+    "css-extraction",
+    "chrome-devtools",
+    "pixel-perfect",
+    "css-variables",
+    "z-index-layers",
+    "tailwind-detection",
+    "state-capture",
+    "icon-extraction",
+    "generalization-validated"
+  ]
+}
