@@ -126,6 +126,25 @@ Clone UI with Chrome DevTools Protocol. Extracts 40+ CSS properties, authored CS
 
 ---
 
+### 8. Project Deep Review
+
+Deep research-based holistic project analysis. 5 specialized agents evaluate tech stack, UX/UI, performance, domain moat, and code quality against latest best practices with anti-bias impact scoring.
+
+**Commands:**
+| Command | Description |
+|---------|-------------|
+| `/deep-review` | 딥 리서치 기반 프로젝트 총체적 분석 — 5개 전문 에이전트가 병렬로 코드, 성능, UX, 해자, 품질을 분석합니다 |
+| `/deep-review-quick` | 빠른 프로젝트 점검 — MUST 이슈만 스캔하는 경량 버전 |
+
+**Agents:**
+- `code-quality-reviewer` - 코드 품질, 테스트 전략, 유지보수성, 기술 부채를 분석하는 에이전트
+- `domain-moat-reviewer` - 프로젝트의 비즈니스 로직, 도메인 해자, 서비스 품질, 고객 편의성을 분석하는 에이전트
+- `performance-reviewer` - 프로젝트의 성능을 Core Web Vitals, 번들 크기, 서버/클라이언트 최적화 관점에서 분석하는 에이전트
+- `tech-stack-reviewer` - 프로젝트의 기술스택, 아키텍처, 의존성을 최신 공식문서와 업계 베스트 프랙티스 기반으로 분석하는 에이전트
+- `ux-design-reviewer` - 프로젝트의 UX/UI, 디자인 미학, 사용성, 접근성을 분석하는 에이전트
+
+---
+
 <!-- PLUGINS_END -->
 
 ## 📁 Structure
