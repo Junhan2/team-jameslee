@@ -41,6 +41,11 @@
       "name": "ui-cloner-v3",
       "source": "./plugins/ui-cloner-v3",
       "description": "100% Perfect UI Clone with generalization-validated Tier system. Achieves 95%+ similarity on 80%+ of sites. CSS variables, z-index layers, Tailwind CSS auto-detection."
+    },
+    {
+      "name": "project-deep-review",
+      "source": "./plugins/project-deep-review",
+      "description": "Deep research-based holistic project analysis. 5 specialized agents evaluate tech stack, UX/UI, performance, domain moat, and code quality against latest best practices with anti-bias impact scoring."
     }
   ]
 }
