@@ -1,0 +1,23 @@
+{
+  "name": "project-deep-review",
+  "version": "1.0.0",
+  "description": "딥 리서치 기반 프로젝트 총체적 분석 — 코드 품질, 성능, UX/UI, 디자인, 도메인 해자, 서비스 품질을 최신 공식문서와 업계 베스트 프랙티스 기반으로 평가하고, 실효성 있는 개선안만 제시합니다.",
+  "author": {
+    "name": "Lee Kang-Joon",
+    "email": "junhanlee91@gmail.com"
+  },
+  "homepage": "https://github.com/Junhan2/team-jameslee",
+  "repository": "https://github.com/Junhan2/team-jameslee",
+  "license": "MIT",
+  "keywords": [
+    "deep-review",
+    "project-audit",
+    "code-quality",
+    "ux-review",
+    "design-review",
+    "performance",
+    "domain-moat",
+    "best-practices",
+    "deep-research"
+  ]
+}
