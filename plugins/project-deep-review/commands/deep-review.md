@@ -1,6 +1,6 @@
 ---
 description: "딥 리서치 기반 프로젝트 총체적 분석 — 5개 전문 에이전트가 병렬로 코드, 성능, UX, 해자, 품질을 분석합니다"
-argument-hint: "[path] [--focus=all|tech|ux|perf|moat|code] [--output=console|file|both]"
+argument-hint: "[tech|ux|perf|moat|code] [path] [--output=file]"
 allowed-tools: ["Read", "Grep", "Glob", "Task", "Bash", "Write", "WebSearch"]
 model: sonnet
 ---
@@ -15,16 +15,26 @@ model: sonnet
 
 ### 1. Parse Arguments
 
-Parse the provided arguments:
-- `path`: 프로젝트 루트 디렉토리 (default: current working directory)
-- `--focus`: 분석 범위 (default: `all`)
-  - `all`: 전체 5개 영역
+Parse the provided arguments using **positional** style:
+
+첫 번째 인자가 키워드(`tech`, `ux`, `perf`, `moat`, `code`)이면 해당 영역만 분석.
+키워드가 없으면 전체 5개 영역 분석.
+
+- **영역 키워드** (선택, 첫 번째 인자):
   - `tech`: 기술스택 & 아키텍처만
   - `ux`: UX/UI & 디자인만
   - `perf`: 성능만
   - `moat`: 도메인 해자 & 서비스 품질만
   - `code`: 코드 품질만
-- `--output`: 출력 형식 (default: `console`)
+  - (생략 시): 전체 5개 영역
+- **path** (선택): 프로젝트 루트 디렉토리 (default: current working directory)
+- `--output=file`: 마크다운 파일로도 저장 (선택)
+
+**예시**:
+- `/deep-review` → 전체 분석
+- `/deep-review tech` → 기술스택만
+- `/deep-review ux /path/to/project` → 특정 경로의 UX만
+- `/deep-review --output=file` → 전체 분석 + 파일 저장
 
 ### 2. Project Context Detection
 

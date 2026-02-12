@@ -29,32 +29,18 @@ triggers:
 
 ### 전체 분석
 ```bash
-# 현재 프로젝트 전체 분석
-/deep-review
-
-# 특정 경로
-/deep-review /path/to/project
-
-# 파일로 출력
-/deep-review --output=file
+/deep-review                        # 전체 5개 영역
+/deep-review /path/to/project       # 특정 경로
+/deep-review --output=file          # 파일로도 저장
 ```
 
 ### 특정 영역 분석
 ```bash
-# 기술스택만
-/deep-review --focus=tech
-
-# UX/디자인만
-/deep-review --focus=ux
-
-# 성능만
-/deep-review --focus=perf
-
-# 도메인 해자만
-/deep-review --focus=moat
-
-# 코드 품질만
-/deep-review --focus=code
+/deep-review tech                   # 기술스택 & 아키텍처
+/deep-review ux                     # UX/UI & 디자인
+/deep-review perf                   # 성능 & Core Web Vitals
+/deep-review moat                   # 도메인 해자 & 서비스 품질
+/deep-review code                   # 코드 품질 & DX
 ```
 
 ### 빠른 점검
