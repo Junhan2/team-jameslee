@@ -46,6 +46,21 @@
       "name": "project-deep-review",
       "source": "./plugins/project-deep-review",
       "description": "Deep research-based holistic project analysis. 5 specialized agents evaluate tech stack, UX/UI, performance, domain moat, and code quality against latest best practices with anti-bias impact scoring."
+    },
+    {
+      "name": "ui-cloner-v4",
+      "source": "./plugins/ui-cloner-v4",
+      "description": "Visual Equivalence UI Cloner. Verify-heavy architecture with section-by-section iterative cloning, 3-layer verification (visual + textual + structural), scroll-tick cross-validation, and behavior analysis."
+    },
+    {
+      "name": "ui-cloner-v5",
+      "source": "./plugins/ui-cloner-v5",
+      "description": "State-Aware UI Cloner. Multi-state capture, sibling role disambiguation, and interaction smoke testing to eliminate the last 5% of visual differences."
+    },
+    {
+      "name": "anything-uxui",
+      "source": "./plugins/anything-uxui",
+      "description": "Comprehensive UIUX design principles — 248 rules across 21 categories for building world-class web interfaces. Covers animation, layout, color systems, accessibility, keyboard navigation, and more."
     }
   ]
 }

@@ -1,0 +1,14 @@
+{
+  "name": "anything-uxui",
+  "description": "Comprehensive UIUX design principles — 248 rules across 21 categories for building world-class web interfaces. Covers animation, layout, color systems, accessibility, keyboard navigation, and more.",
+  "owner": {
+    "name": "Junhan Lee (James Lee)",
+    "email": "junhanlee91@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "anything-uxui",
+      "source": "./"
+    }
+  ]
+}

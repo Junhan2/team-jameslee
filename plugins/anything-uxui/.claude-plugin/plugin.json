@@ -1,0 +1,14 @@
+{
+  "name": "anything-uxui",
+  "version": "2.0.0",
+  "description": "Comprehensive UIUX design principles — 248 rules across 21 categories for building world-class web interfaces",
+  "author": {
+    "name": "Junhan Lee (James Lee)",
+    "email": "junhanlee91@gmail.com",
+    "organization": "select.codes"
+  },
+  "homepage": "https://github.com/Junhan2/team-jameslee",
+  "repository": "https://github.com/Junhan2/team-jameslee",
+  "license": "MIT",
+  "keywords": ["uiux", "design", "animation", "accessibility", "web-standards", "layout", "color-system", "design-tokens", "keyboard", "forms"]
+}
