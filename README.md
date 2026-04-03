@@ -145,6 +145,24 @@ Deep research-based holistic project analysis. 5 specialized agents evaluate tec
 
 ---
 
+### 9. UI Cloner V4
+
+Visual Equivalence UI Cloner. Verify-heavy architecture with section-by-section iterative cloning, 3-layer verification (visual + textual + structural), scroll-tick cross-validation, and behavior analysis.
+
+---
+
+### 10. UI Cloner V5
+
+State-Aware UI Cloner. Multi-state capture, sibling role disambiguation, and interaction smoke testing to eliminate the last 5% of visual differences.
+
+---
+
+### 11. Anything Uxui
+
+Comprehensive UIUX design principles — 248 rules across 21 categories for building world-class web interfaces. Covers animation, layout, color systems, accessibility, keyboard navigation, and more.
+
+---
+
 <!-- PLUGINS_END -->
 
 ## 📁 Structure
