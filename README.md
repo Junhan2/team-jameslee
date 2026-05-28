@@ -49,8 +49,9 @@ Track work sessions with structured logs (/log) and get quick recaps (/recap). S
 **Commands:**
 | Command | Description |
 |---------|-------------|
+| `/catchup` | 작업을 다시 시작할 때 "어디까지 했고 다음에 뭘 해야 하나"를 빠르게 잡아주는 재개 오리엔테이션이다. |
 | `/log` | 현재 작업 세션의 로그를 .claude/logs/YYYY-MM-DD.md 파일에 기록합니다. |
-| `/recap` | 최근 작업 세션의 상태를 요약하여 보여줍니다. |
+| `/wrap` | 세션이 끝나갈 때 한 번 읽으면 전체가 이해되는 줄글로 보고한다. |
 
 ---
 
