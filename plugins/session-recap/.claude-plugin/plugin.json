@@ -1,7 +1,7 @@
 {
   "name": "session-recap",
   "version": "1.0.0",
-  "description": "Track work sessions with structured logs and get quick recaps of recent progress",
+  "description": "Track work sessions: structured logs (/log), resume catch-ups (/catchup), and detailed end-of-session narrative debriefs (/wrap)",
   "author": {
     "name": "Junhan Lee (James Lee)",
     "email": "junhanlee91@gmail.com"
@@ -9,5 +9,5 @@
   "homepage": "https://github.com/Junhan2/session-recap",
   "repository": "https://github.com/Junhan2/session-recap",
   "license": "MIT",
-  "keywords": ["session", "log", "recap", "productivity", "tracking"]
+  "keywords": ["session", "log", "catchup", "recap", "wrapup", "debrief", "narrative", "productivity", "tracking"]
 }
