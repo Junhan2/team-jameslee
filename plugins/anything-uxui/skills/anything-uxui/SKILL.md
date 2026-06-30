@@ -80,10 +80,16 @@ Three beliefs that govern every rule in this system:
 | 12 | [Performance](references/12-performance.md) | HIGH | 8 | GPU acceleration, CSS vs JS, WAAPI, blur limits |
 | 13 | [Prefetching](references/13-prefetching.md) | MEDIUM | 6 | Trajectory prediction, hitSlop, touch fallback |
 | 14 | [Accessibility](references/14-accessibility.md) | HIGH | 8 | Reduced motion, rem units, focus-visible, target sizes |
-| 15 | [Review Checklist](references/15-review-checklist.md) | HIGH | — | Quality checklist, debug methods, review format |
+| 15 | [Review Methodology & Checklist](references/15-review-checklist.md) | HIGH | — | Reviewer posture, 10 non-negotiable standards, escalation triggers, remedial hierarchy, Block/Approve verdict, checklist, debug |
 | 20 | [Keyboard & State Matrix](references/20-keyboard-state-matrix.md) | CRITICAL | 10 | Roving tabindex, focus-visible, 7-state matrix, ARIA |
 
 **Total: 248 rules across 21 categories**
+
+### Appendix (reference — not counted as rules)
+
+| # | Category | Type | Reference |
+|---|----------|------|-----------|
+| 22 | [Animation Vocabulary](references/22-animation-vocabulary.md) | REFERENCE | Reverse-lookup glossary: vague description → precise term → the category that governs it |
 
 ---
 
@@ -171,6 +177,9 @@ Three beliefs that govern every rule in this system:
 1. [21-Form Patterns](references/21-form-patterns.md) for inputs, validation, custom controls
 2. [20-Keyboard & State](references/20-keyboard-state-matrix.md) for state matrix, aria-disabled
 3. [14-Accessibility](references/14-accessibility.md) for target sizes, rem units
+
+### When you don't know what an effect is called:
+1. [22-Animation Vocabulary](references/22-animation-vocabulary.md) — describe the motion loosely, get the precise term, then follow its pointer to the category that governs building it correctly
 
 ---
 

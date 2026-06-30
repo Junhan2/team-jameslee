@@ -151,6 +151,8 @@ Built-in CSS easing keywords are too mild. They lack the punch that makes animat
 }
 ```
 
+**Finding stronger curves**: don't hand-roll cubic-beziers from scratch. Use [easing.dev](https://easing.dev/) or [easings.co](https://easings.co/) to pick stronger custom variants of the standard easings, then paste the curve into the token above.
+
 ### easing-linear-progress-only — linear easing only for time/progress
 
 linear feels robotic for motion. Reserve it for:

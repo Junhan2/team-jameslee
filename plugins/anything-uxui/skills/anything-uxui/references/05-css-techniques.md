@@ -92,7 +92,9 @@ Every element has an anchor point where transforms execute from. Default is cent
 }
 ```
 
-**When to apply**: Dropdowns (top), context menus (click position), modals (trigger button) — any UI with a clear expansion origin.
+**When to apply**: Dropdowns (top), context menus (click position), popovers & tooltips (trigger position) — any UI anchored to a clear trigger.
+
+**Exception — modals / dialogs**: keep `transform-origin: center`. A modal is *not* anchored to a trigger; it appears centered in the viewport. See `04-component-patterns` (Modal → center) and `17-dialog-overlay-patterns`.
 
 ---
 
