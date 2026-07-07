@@ -162,6 +162,13 @@ State-Aware UI Cloner. Multi-state capture, sibling role disambiguation, and int
 
 Comprehensive UIUX design principles — 248 rules across 21 categories for building world-class web interfaces. Covers animation, layout, color systems, accessibility, keyboard navigation, and more.
 
+**Commands:**
+| Command | Description |
+|---------|-------------|
+| `/audit` | Audit UI/animation/interaction/state code (esp. React) against anything-uxui rules and return a Block/Approve verdict. Read-only. |
+| `/design` | Build a new UI/component guided by anything-uxui rules so the output is polished and NOT generic/AI-made. |
+| `/fix` | Audit then FIX bad UI/animation/interaction/state code against anything-uxui rules, applying the remedial hierarchy to the working tree. |
+
 ---
 
 <!-- PLUGINS_END -->
