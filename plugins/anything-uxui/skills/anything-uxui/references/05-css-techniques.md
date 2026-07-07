@@ -639,4 +639,38 @@ When elements are stacked with gaps (toast stack, dropdown chain), hover breaks 
 
 ---
 
+## Registered Custom Properties
+
+### css-at-property-animate — Animate custom properties with `@property`
+
+`@property` (Baseline Jul 2024) registers a custom property with a type, so the browser can *interpolate* it in transitions/animations — enabling animated gradients, glows, and numeric counters that plain custom properties cannot do.
+
+```css
+@property --angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.gradient-border {
+  background: linear-gradient(var(--angle), var(--brand), var(--accent));
+  transition: --angle 400ms var(--ease-out);
+}
+.gradient-border:hover { --angle: 180deg; }
+```
+
+**When to apply**: Animated gradient angles/stops, glow hues, numeric tickers (`<integer>` + counter). Also gives design tokens type-safety + initial values.
+
+### css-view-transition-loading-mask — View transition as a loading mask
+
+Pair the Navigation API's `intercept()` with a view transition so the old view stays frozen (`::view-transition-old`) while new content settles — masking a few hundred ms of load with no spinner.
+
+```js
+navigation.addEventListener('navigate', (e) => {
+  if (!document.startViewTransition) return; // progressive enhancement
+  e.intercept({ handler: () => document.startViewTransition(() => render()) });
+});
+```
+
+Always add `@media (prefers-reduced-motion: reduce) { ::view-transition-group(*) { animation: none } }`.
+
+**When to apply**: Route/view transitions where content loads async and you'd otherwise show a spinner.
+
+---
+
 *Produced by junhan of select.codes*

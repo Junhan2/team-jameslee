@@ -276,3 +276,37 @@ Touch devices need larger tap targets. Baseline is **44px** (with a 24px WCAG 2.
 ```
 
 **When to apply:** Every interactive element. 48px is Apple's HIG minimum and Google's Material spec minimum for touch targets. Non-negotiable on mobile.
+
+---
+
+## SPA Navigation
+
+### `state-spa-route-focus` — Move focus on client-side navigation
+
+On SPA route changes, screen-reader and keyboard users get silence unless you manage focus. On each navigation: (1) move focus to the new view's `<h1>` or `<main tabindex="-1">`; (2) update `document.title`; (3) let the title change (or a polite live region) announce the page.
+
+```tsx
+function onRouteChange(pageName: string) {
+  document.title = `${pageName} — App`;
+  const main = document.querySelector('main');
+  main?.setAttribute('tabindex', '-1');
+  main?.focus(); // focus lands at the top of the new content
+}
+```
+
+The **Navigation API** (Baseline 2026 — Chrome/Safari/Firefox) handles focus + scroll restoration natively: `navigation.addEventListener('navigate', e => e.intercept({ handler }))`, with `event.scroll()` to time scroll restore after async content resolves. Prefer it as the SPA routing layer; fall back to manual focus + `history.scrollRestoration = 'manual'`.
+
+**When to apply**: Every client-side route change.
+
+### `state-skip-link` — Skip to main content + focus not obscured
+
+The first focusable element should be a "Skip to main content" link — visually hidden until `:focus-visible`, targeting `<main tabindex="-1">` (WCAG 2.4.1). In app shells with a persistent sidebar + topbar, skip links matter *more*, not less. And a focused element must never be entirely hidden by sticky headers (WCAG 2.2 SC 2.4.11).
+
+```css
+.skip-link { position: absolute; left: -9999px; }
+.skip-link:focus-visible { left: 1rem; top: 1rem; z-index: 999; }
+/* Focus never hidden behind sticky chrome */
+:target, :focus-visible { scroll-margin-top: calc(var(--header-height) + 1rem); }
+```
+
+**When to apply**: Every page with navigation chrome or sticky headers.

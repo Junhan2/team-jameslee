@@ -298,3 +298,31 @@ Use `document.visibilitychange` to pause auto-dismiss timers (toasts, notificati
   <ProfilePanel />   {/* keeps scroll + form state when the tab is switched away */}
 </Activity>
 ```
+
+### component-details-accordion — Native disclosure/accordion with `::details-content`
+
+`<details>` + `::details-content` (Baseline Sep 2025) gives a no-JS disclosure you can animate. `<details name="…">` makes an exclusive accordion (one open at a time). Animate with `transition-behavior: allow-discrete` + height (interpolate-size in Chromium, grid `0fr→1fr` cross-browser).
+
+```css
+details::details-content {
+  opacity: 0; block-size: 0;
+  transition: opacity 200ms, block-size 200ms, content-visibility 200ms allow-discrete;
+  interpolate-size: allow-keywords;
+}
+details[open]::details-content { opacity: 1; block-size: auto; }
+```
+
+**When to apply**: FAQs, settings sections, disclosure widgets. Prefer over a JS accordion when the content is static markup. (→ vocab `Accordion / Collapse`)
+
+### component-stagger-sibling-index — Native stagger with `sibling-index()`
+
+`animation-delay: calc(sibling-index() * var(--stagger))` staggers a list without hardcoding `:nth-child(n)` delays — and adapts as items change.
+
+```css
+.item {
+  animation: fade-in 300ms var(--ease-out) both;
+  animation-delay: calc(sibling-index() * 50ms);
+}
+```
+
+Support (2026): Chrome 138+, Safari 26.2+; **Firefox not yet** — keep an inline `--index` or `:nth-child` fallback (see `component-stagger`). (→ `timing-stagger-adaptive`)

@@ -252,3 +252,38 @@ Use alpha-channel colors for borders, overlays, and dividers. They adapt to ANY 
 ```
 
 **When to apply:** Borders, dividers, overlays, subtle backgrounds. Anywhere color meets variable backgrounds. Especially powerful with dark mode — halves the number of color tokens needed.
+
+---
+
+## `color-contrast-minimum` — Meet WCAG 2.2 contrast ratios
+
+Contrast is the #1 accessibility failure on the web (WebAIM 2026: ~83% of sites). Meet WCAG 2.2 (SC 1.4.3 / 1.4.11):
+- **Body text** ≥ **4.5:1** against its background
+- **Large text** (≥24px, or ≥18.66px bold) ≥ **3:1**
+- **UI components & graphical objects** (icons, input borders, focus rings, chart marks) ≥ **3:1**
+
+These ratios are the legal standard through ~2030. APCA (the perceptual algorithm) was *removed* from the WCAG 3 draft in 2023 and its replacement is undecided — use it only as an optional design-time double-check, never as the compliance basis. In OKLCH, drive contrast with the **lightness (L)** channel; two colors with similar L will fail regardless of hue.
+
+```css
+/* ✅ Verify token pairs against their surface — don't eyeball */
+--text-on-surface: oklch(0.25 0.02 260); /* ≥4.5:1 on --surface-1 */
+--border-input:    oklch(0.55 0 0);       /* ≥3:1 — a visible input boundary */
+```
+
+**When to apply**: Every text/background and UI-element pair. Optionally add `@media (prefers-contrast: more)` overrides and test under `forced-colors: active`.
+
+---
+
+## `color-light-dark` — Collapse theme pairs with `light-dark()`
+
+`light-dark()` (Baseline 2024) picks a value by the current `color-scheme` — no `[data-theme]` block duplication for one-off pairs, and it auto-themes UA surfaces (form controls, scrollbars).
+
+```css
+:root { color-scheme: light dark; }        /* required for light-dark() to resolve */
+.card {
+  background: light-dark(oklch(0.98 0 0), oklch(0.18 0 0));
+  color:      light-dark(oklch(0.25 0 0), oklch(0.92 0 0));
+}
+```
+
+Keep the token-level `[data-theme]` architecture for full systems (it allows a manual toggle independent of the OS); reach for `light-dark()` for isolated pairs and UA-surface theming. Complements, not replaces, the 3-tier token model.

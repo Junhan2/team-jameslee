@@ -183,3 +183,21 @@ function updateThemeColor(progress) {
 ### gesture-color-interpolation — Real-time color feedback during drag
 
 Map drag progress (0–1) to a color array index for smooth color transitions during gesture. Use for background color shifts, overlay opacity, and non-CSS properties that can't use CSS transitions.
+
+---
+
+## Accessibility
+
+### gesture-non-drag-alternative — Every drag needs a single-pointer alternative (WCAG 2.5.7)
+
+WCAG 2.2 SC 2.5.7 (AA, now enforced under the EU EAA): all functionality operated by a dragging movement must also work with a single pointer (tap/click) — unless dragging is essential. Swipe-to-dismiss, drag-to-reorder, and slider drags each need a non-drag path. This resolves the tension with the skill's "Accessibility always wins" policy.
+
+```tsx
+// ✅ Swipe to dismiss — pair with a visible close button
+<Toast onSwipe={dismiss}><button aria-label="Dismiss" onClick={dismiss}>×</button></Toast>
+
+// ✅ Drag to reorder — pair with move up/down controls (or a keyboard handler)
+<Row onDrag={reorder}><button onClick={moveUp}>↑</button><button onClick={moveDown}>↓</button></Row>
+```
+
+**When to apply**: Every swipe, drag-reorder, or drag-slider interaction. The 2026 standard pattern is an overflow "…" menu on list rows exposing the same actions.

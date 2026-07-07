@@ -385,3 +385,35 @@ On mobile, use a bottom drawer. On desktop, use a centered dialog. The content i
 ```
 
 **When to apply**: Any overlay that appears on both mobile and desktop. Build content once, adapt the container with CSS.
+
+---
+
+## dialog-css-exit: Animate dialog/popover close with pure CSS
+
+Native `<dialog>`/popover need `transition-behavior: allow-discrete` to animate their *close* (`display` + top-layer `overlay` are discrete properties). Pair with `@starting-style` for open. No JS timing.
+
+```css
+dialog {
+  opacity: 1; transform: translateY(0);
+  transition: opacity 200ms, transform 200ms,
+              display 200ms allow-discrete, overlay 200ms allow-discrete;
+}
+dialog:not([open]) { opacity: 0; transform: translateY(8px); }
+@starting-style { dialog[open] { opacity: 0; transform: translateY(8px); } }
+```
+
+(`overlay` is Chromium-only — a harmless progressive line.) **When to apply**: Any animated `<dialog>` or popover close.
+
+## dialog-invoker-commands: Declarative open/close with `command`/`commandfor`
+
+Invoker Commands (Baseline Dec 2025) open/close dialogs and popovers with **zero JS**, pre-hydration:
+
+```html
+<button commandfor="dlg" command="show-modal">Open</button>
+<dialog id="dlg">
+  <button commandfor="dlg" command="close">Close</button>
+</dialog>
+<!-- popovers: command="toggle-popover" | "show-popover" | "hide-popover" -->
+```
+
+**When to apply**: Any dialog/popover trigger. Replaces hand-rolled onClick handlers; works before JS loads.

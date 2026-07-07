@@ -300,3 +300,20 @@ Apply `isolation: isolate` on:
 3. Any element that should contain its children's stacking
 
 **When to apply**: Always. Set on app root as a baseline. Add to any component that uses z-index internally. Prevents the "z-index: 99999" escalation pattern.
+
+---
+
+## layout-scroll-state: Style sticky elements when actually stuck
+
+`@container scroll-state(stuck: top)` styles a sticky header only when it is *actually* stuck — a shadow/border on scroll — with zero IntersectionObserver JS. `scrollable`/`snapped` cover "more below" affordances and active carousel items.
+
+```css
+.header { position: sticky; top: 0; container-type: scroll-state; }
+@container scroll-state(stuck: top) {
+  .header { box-shadow: var(--shadow-sm); }
+}
+```
+
+Support (2026): Chromium 133+ only; Safari/Firefox in progress. Progressive enhancement — gate with `@supports (container-type: scroll-state)`; use IntersectionObserver only if the state indication is essential.
+
+**When to apply**: Sticky headers/toolbars needing a stuck state, scroll affordances, carousel active markers.

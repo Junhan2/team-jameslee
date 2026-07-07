@@ -216,3 +216,21 @@ select {
 The `font: inherit` shorthand sets `font-family`, `font-size`, `font-weight`, `font-style`, `line-height`, and `font-variant` in one declaration.
 
 **When to apply**: Always. Add this to your CSS reset. There is no valid reason for form elements to use different typography than the rest of the page.
+
+---
+
+## form-wcag22-input: WCAG 2.2 input requirements (paste, autocomplete, no redundant entry)
+
+Cheap, high-litigation-value rules (now enforced under the EU EAA):
+- **Never block paste** in password/OTP fields (WCAG 3.3.8 Accessible Authentication); support password managers with `autocomplete="current-password"` / `autocomplete="one-time-code"`.
+- **`autocomplete` on identity fields** (WCAG 1.3.5) — `name`, `email`, `tel`, `postal-code` — so browsers auto-fill.
+- **Never re-ask** information already given in the same flow (WCAG 3.3.7 Redundant Entry) — auto-populate or offer to reuse.
+- Set **`inputmode`** (`numeric`, `email`, `tel`, `decimal`) so mobile keyboards match the field.
+
+```html
+<!-- paste allowed by default — never onPaste={e => e.preventDefault()} -->
+<input type="password" autocomplete="current-password" />
+<input type="text" inputmode="numeric" autocomplete="one-time-code" />
+```
+
+**When to apply**: Every auth field, identity field, and multi-step flow. (On-blur validation timing builds on the existing `form-user-validation` `:user-invalid` — same concept, CSS-native.)

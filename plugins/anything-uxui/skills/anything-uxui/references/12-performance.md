@@ -216,3 +216,26 @@ Apply `overflow: hidden` on the animated container to prevent content flash duri
   <div ref={ref}>{children}</div>
 </motion.div>
 ```
+
+---
+
+## Interaction Responsiveness (INP)
+
+### perf-inp-under-200ms — Keep interactions under the INP budget
+
+**INP (Interaction to Next Paint)** replaced FID as a Core Web Vital in March 2024 — it measures the *worst* interaction latency across the whole page (input delay + processing + presentation) at p75. Good = **< 200ms**; ~43% of sites fail it (2026). Animation is part of INP: the presentation delay after a click includes your transition's first paint.
+
+- **Break long tasks** (> 50ms): chunk heavy handlers; `await scheduler.yield()` to return the main thread between steps.
+- **Defer non-urgent work**: `startTransition` / `useDeferredValue` (React) so the interaction paints before the expensive re-render.
+- **Prefer CSS/compositor animation** over main-thread JS for interaction feedback — it doesn't compete with the handler for the main thread.
+- **Isolate third-party JS** (analytics, chat, ads) — the #1 cause of poor INP.
+
+```js
+async function onClick() {
+  updateUIImmediately();     // paint the response first
+  await scheduler.yield();   // yield to the browser
+  await doExpensiveWork();   // then the heavy part
+}
+```
+
+**When to apply**: Every click/tap/keypress handler that does non-trivial work.
