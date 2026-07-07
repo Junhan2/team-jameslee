@@ -258,6 +258,18 @@ Uppercase and small-caps text needs positive `letter-spacing` for an open feel a
 
 ---
 
+## `type-box-trim` — Optical vertical centering with text-box-trim
+
+`text-box: trim-both cap alphabetic` trims the half-leading above cap height and below the baseline → true optical centering in buttons/badges and exact text-to-space ratios in cards. Support (2026): Chrome/Edge 133+, Safari 18.2+; **Firefox not yet** — it renders the looser line box, so layout must not depend on it. No magic-padding compensation.
+
+```css
+.button, .badge { text-box: trim-both cap alphabetic; }
+```
+
+**When to apply**: Buttons, badges, chips, tight display headings — anywhere text must sit optically centered in a box.
+
+---
+
 ## Quick Reference Table
 
 | Property | Use Case | Value |

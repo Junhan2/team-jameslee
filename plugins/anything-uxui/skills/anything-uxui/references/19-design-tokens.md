@@ -197,3 +197,39 @@ Every numeric value in CSS must reference a token. If you're typing a raw number
 Exceptions: `0`, `1`, `100%`, `50%` (centering), and single-use values in animations. Everything else gets a token.
 
 **When to apply:** Every CSS property that accepts a numeric value. Enforce in code review — magic numbers are the most common design system violation.
+
+---
+
+## `token-typography-scale` — Tokens must include the type dimension
+
+A "complete" token set includes typography, not just color/space/radius/shadow. Add a type scale + line-heights (Tailwind v4 namespaces these `--text-*`, `--leading-*`, `--font-weight-*`, `--tracking-*`; DTCG has a typography composite type):
+
+```css
+:root {
+  --text-xs: 0.75rem; --text-sm: 0.875rem; --text-base: 1rem;
+  --text-lg: 1.125rem; --text-xl: 1.5rem; --text-2xl: 2rem;
+  --leading-tight: 1.15; --leading-normal: 1.5;
+  --tracking-tight: -0.01em;
+}
+```
+
+## `token-dtcg-interchange` — Use DTCG JSON when tokens cross tools
+
+CSS variables are the RUNTIME layer (rules above). When tokens must cross tools or platforms (Figma ↔ code), the W3C **DTCG format** (first stable Format Module, Oct 2025) is the interchange: `.tokens.json` with `$value`/`$type`/aliases. Single-app web projects don't need a JSON pipeline; multi-tool/multi-platform ones do. (Color & Resolver modules are still draft — don't rely on them yet.)
+
+## `token-tailwind-theme-bridge` — Map the 3-tier model onto Tailwind v4 `@theme`
+
+Most AI-built UIs are Tailwind. v4 makes tokens CSS-native via `@theme` (default palette OKLCH). Map the 3-tier model:
+
+```css
+@theme {                          /* primitives → generate utilities */
+  --color-brand: oklch(0.62 0.19 255);
+}
+:root { --background: oklch(0.99 0 0); --foreground: oklch(0.2 0 0); }  /* semantic */
+@theme inline {                   /* REQUIRED when a token references another var */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+```
+
+**Critical**: semantic tokens that reference other vars MUST go in `@theme inline`, not bare `@theme` — otherwise the cascade resolves at `:root` and per-context overrides (`.dark`, component scopes) silently break. Never hardcode `bg-[#hex]` arbitrary values.
