@@ -31,7 +31,7 @@ Every animation in the diff is measured against these. A violation is a finding.
 4. **Sub-300ms UI.** UI animations stay under 300ms; anything slower on a UI element needs justification. (→ `timing-300ms-cap`)
 5. **Origin & physical correctness.** Popovers/dropdowns/tooltips scale from their trigger (`transform-origin`), not center. Never animate from `scale(0)` — start from `scale(0.95)` + opacity. Modals are exempt — they stay centered. (→ `04-component-patterns`, `05-css-techniques`)
 6. **Interruptibility.** Rapidly-triggered or gesture-driven motion (toasts, toggles, drags) uses transitions/springs that retarget from current state, not keyframes that restart from zero. (→ `03-spring-physics`, `07-exit-animations`)
-7. **GPU-only properties.** Animate `transform` and `opacity` only. Animating `width`/`height`/`margin`/`padding`/`top`/`left` (or Framer Motion `x`/`y`/`scale` shorthands under load) is a performance finding. (→ `12-performance`)
+7. **GPU-only properties.** Animate `transform` and `opacity` only. Animating `width`/`height`/`margin`/`padding`/`top`/`left` (or Motion `x`/`y`/`scale` shorthands under load) is a performance finding. (→ `12-performance`)
 8. **Accessibility.** `prefers-reduced-motion` honored (gentler, not zero — keep opacity/color, drop movement). Hover motion gated behind `@media (hover: hover) and (pointer: fine)`. (→ `14-accessibility`)
 9. **Asymmetric enter/exit.** Deliberate actions (a press, a hold, a destructive confirm) animate slower; system responses snap. Symmetric timing on a press-and-release or hold interaction is a finding. (→ `timing-asymmetric-press`, `07-exit-animations`)
 10. **Cohesion.** Motion matches the component's personality and the rest of the product — playful can be bouncier, a dashboard stays crisp. When unsure whether motion feels right, the strongest move is often to delete it. (→ `01-philosophy` cohesion)
@@ -50,7 +50,7 @@ Flag these on sight, hard:
 - `transform-origin: center` on a trigger-anchored popover/dropdown/tooltip
 - Keyframes on toasts, toggles, or anything added/triggered rapidly
 - Animating layout properties (`width`/`height`/`margin`/`padding`/`top`/`left`)
-- Framer Motion `x`/`y`/`scale` props on motion that runs while the page is busy
+- Motion `x`/`y`/`scale` props on motion that runs while the page is busy
 - Updating a CSS variable on a parent to drive a child transform (style-recalc storm)
 - Missing `prefers-reduced-motion` handling on movement
 - Ungated `:hover` motion
@@ -88,7 +88,7 @@ A single markdown table. One row per issue. Never a "Before:" / "After:" bullet 
 | `transition: all 300ms` | `transition: transform 200ms var(--ease-out)` | Specify exact property; `all` animates unintended props off-GPU |
 | `transform: scale(0)` | `transform: scale(0.95); opacity: 0` | Nothing appears from nothing |
 | `ease-in` on dropdown | `ease-out` + custom curve | `ease-in` delays the moment the user watches most; feels sluggish |
-| `transform-origin: center` on popover | `var(--radix-popover-content-transform-origin)` | Popovers scale from their trigger, not center (modals exempt) |
+| `transform-origin: center` on popover | `var(--transform-origin)` (Base UI) / `var(--radix-popover-content-transform-origin)` (Radix) | Popovers scale from their trigger, not center (modals exempt) |
 
 ### Part 2 — Verdict (required)
 
@@ -153,7 +153,7 @@ A fast verification pass. Use after the methodology above, or standalone for a q
 
 ### Performance
 - [ ] Only `transform` and `opacity` animated (no height/width/margin/padding)
-- [ ] Framer Motion uses full `transform` string for hardware acceleration
+- [ ] Motion uses full `transform` string (not x/y shorthand) for hardware acceleration under load
 - [ ] CSS variables not updated on parents with many children
 - [ ] `box-shadow` animated via pseudo-element opacity
 - [ ] `filter: blur()` kept under 20px
@@ -161,7 +161,7 @@ A fast verification pass. Use after the methodology above, or standalone for a q
 ### Accessibility
 - [ ] `prefers-reduced-motion` respected: transforms removed, opacity/color kept
 - [ ] Hover animations gated behind `@media (hover: hover) and (pointer: fine)`
-- [ ] Interactive targets ≥ 32px
+- [ ] Interactive targets ≥ 24px (WCAG 2.2 AA floor); 44–48px on touch
 - [ ] Hit areas expanded via pseudo-element for small visual elements
 
 ### Visual Design

@@ -204,22 +204,18 @@ Prefer `aria-disabled="true"` over the `disabled` HTML attribute. The `disabled`
 
 ### `state-loading-aria-busy`
 
-Set `aria-busy="true"` on the container during loading. Update `aria-label` to reflect loading state. Wrap skeleton UI in `role="status"` with `aria-live="polite"` for screen reader announcements.
+Set `aria-busy="true"` on the container during loading. **The live region must be pre-registered — present and empty in the DOM before the message appears.** A `role="status"` node mounted at the same moment as its text is frequently NOT announced (the browser must expose the region to the accessibility tree first). Keep one persistent status node and toggle only its text.
 
 ```tsx
-// ❌ No loading announcement — screen reader sees empty container
-<div>{isLoading ? <Skeleton /> : <Content />}</div>
+// ❌ Live region mounted together with its content — announcement often missed
+<div>{isLoading ? <div role="status" aria-live="polite"><Skeleton/></div> : <Content />}</div>
 
-// ✅ Proper loading semantics
+// ✅ Persistent, pre-registered status node; only the TEXT toggles
 <div aria-busy={isLoading} aria-label={isLoading ? 'Loading results' : 'Search results'}>
-  {isLoading ? (
-    <div role="status" aria-live="polite">
-      <span className="sr-only">Loading results...</span>
-      <Skeleton />
-    </div>
-  ) : (
-    <Content />
-  )}
+  <div role="status" aria-live="polite" className="sr-only">
+    {isLoading ? 'Loading results…' : ''}
+  </div>
+  {isLoading ? <Skeleton /> : <Content />}
 </div>
 ```
 
@@ -253,12 +249,12 @@ Design hover+focus and active+focus as explicit compound states, not independent
 
 ### `state-pointer-coarse-escalation`
 
-Touch devices need larger tap targets. Escalate interactive element minimum dimensions from 32px (mouse) to 48px (touch). Use `pointer: coarse` media query.
+Touch devices need larger tap targets. Baseline is **44px** (with a 24px WCAG 2.2 AA floor); escalate to **48px** on touch. Use `pointer: coarse` media query.
 
 ```css
-/* Base: mouse-friendly minimum */
-.button { min-height: 2rem; min-width: 2rem; /* 32px */ }
-.icon-button { min-height: 2rem; min-width: 2rem; padding: var(--space-1); }
+/* Base: 44px recommended (24px WCAG 2.2 AA floor) */
+.button { min-height: 2.75rem; min-width: 2.75rem; /* 44px */ }
+.icon-button { min-height: 2.75rem; min-width: 2.75rem; padding: var(--space-1); }
 
 /* Touch: escalate to 48px targets */
 @media (pointer: coarse) {

@@ -67,21 +67,23 @@ Directly transitioning `box-shadow` triggers expensive repaints. Instead, create
 
 ---
 
-## Framer Motion Hardware Acceleration
+## Motion (Framer Motion) Hardware Acceleration
 
-### perf-framer-motion-hw — Use full transform string for hardware acceleration
+> The library formerly called **Framer Motion** is now **Motion** — `import { motion } from "motion/react"` (v12, no breaking React changes). Rule-id `perf-motion-hw` supersedes `perf-framer-motion-hw` (alias).
 
-Framer Motion's shorthand properties (`x`, `y`, `scale`) are NOT hardware-accelerated. They use `requestAnimationFrame` on the main thread. For hardware acceleration, use the full `transform` string.
+### perf-motion-hw — Prefer full transform string for hardware acceleration
+
+Motion's shorthand transforms (`x`, `y`, `scale`) animate CSS variables that are **not** compositor-accelerated (verified against motion.dev/docs/performance, 2026) — they run on the main thread and can drop frames under load. For guaranteed hardware acceleration, animate the full `transform` string.
 
 ```tsx
-// ❌ Not hardware-accelerated (convenient but drops frames under load)
+// ⚠️ Convenient, but not compositor-accelerated (can drop frames under load)
 <motion.div animate={{ x: 100 }} />
 
-// ✅ Hardware-accelerated (smooth even when main thread is busy)
+// ✅ Compositor-accelerated (smooth even when the main thread is busy)
 <motion.div animate={{ transform: "translateX(100px)" }} />
 ```
 
-This matters when the browser is simultaneously loading content, executing scripts, or painting.
+Treat this as **progressive enhancement, not an absolute**: the shorthand path is fine for most cases and is *required* when composing with `layout`/drag (which need Motion's transform composition). Reach for the full-transform form only on animations that must stay smooth while the page is busy loading/scripting/painting. (See also `perf-motion-values-no-rerender`.)
 
 ---
 
@@ -89,7 +91,7 @@ This matters when the browser is simultaneously loading content, executing scrip
 
 ### perf-css-vs-js — CSS for predetermined, JS for dynamic
 
-CSS animations run off the main thread. When the browser is busy loading a new page, Framer Motion animations (using `requestAnimationFrame`) drop frames. CSS animations stay smooth.
+CSS animations run off the main thread. When the browser is busy loading a new page, Motion's JS-driven animations (using `requestAnimationFrame`) drop frames. CSS animations stay smooth.
 
 | Use CSS when | Use JS when |
 |-------------|-------------|

@@ -1,7 +1,7 @@
 ---
 title: Exit Animation Patterns
 impact: HIGH
-tags: exit, animatepresence, framer-motion, unmount, transition
+tags: exit, animatepresence, motion, unmount, transition
 ---
 
 # Exit Animation Patterns

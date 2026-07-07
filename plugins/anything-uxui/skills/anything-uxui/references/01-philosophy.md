@@ -204,7 +204,7 @@ Match motion to mood. Animation style must align with design, naming, and overal
 When items enter or exit a list, opacity changes must align well with the height animation.
 
 ### Application
-There is no formula -- **adjust until it feels right.** Trial and error is the only method.
+Height itself is no longer hand-tuned guesswork: animate to `height: auto` natively with **`interpolate-size: allow-keywords`** + `calc-size()` (Chromium; non-supporting browsers snap gracefully), or the cross-browser **`grid-template-rows: 0fr → 1fr`** wrapper. Never animate `max-height` to a magic number — it distorts the easing curve. What still needs a feel-pass is the *pairing*: how the opacity/blur timing overlaps the height change. Adjust that overlap until it reads as one motion. (→ `05-css-techniques`)
 
 ---
 

@@ -71,27 +71,30 @@ Touch devices trigger hover on tap, causing false positives. Gate hover effects 
 
 ---
 
-## `a11y-target-size-32` — Interactive targets minimum 32px
+## `a11y-target-size-24` — Targets: 24px floor (WCAG 2.2 AA), 44–48px on touch
 
-Fitts's Law: larger targets are easier to click. Interactive elements must be at least 32px. Especially important for finger tap accuracy on mobile.
+WCAG 2.2 SC 2.5.8 (AA) sets a **24×24 CSS px** minimum for pointer targets — the legal floor now enforced under the EU EAA / EN 301 549. Exceptions: 24px center-to-center spacing to adjacent targets, inline text links, or where essential. Design default: **44px** (Apple HIG, WCAG 2.5.5 AAA); **48px** on touch (Material). The previous "32px" figure had no standards basis.
 
 ```css
-/* ❌ Small click target — causes missed clicks */
+/* ❌ Below the WCAG 2.2 floor — missed clicks + AA failure */
 .icon-button {
   width: 16px;
   height: 16px;
   padding: 0;
 }
 
-/* ✅ Comfortable target — 32px minimum */
+/* ✅ 24px legal floor; 44px comfortable default, 48px on touch */
 .icon-button {
-  width: 32px;
-  height: 32px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 8px;
+}
+@media (pointer: coarse) {
+  .icon-button { min-width: 48px; min-height: 48px; }
 }
 ```
 
-**When to apply**: All interactive elements (buttons, links, checkboxes, toggles, tabs).
+**When to apply**: All interactive elements (buttons, links, checkboxes, toggles, tabs). See also `a11y-pointer-coarse-48`.
 
 ---
 
@@ -176,7 +179,7 @@ Start WITHOUT animation, ADD via `@media (prefers-reduced-motion: no-preference)
 
 ### a11y-pointer-coarse-48 — Escalate touch targets to 48px
 
-Beyond the 32px minimum, touch devices should escalate to 48px.
+Beyond the 24px WCAG 2.2 AA floor, touch devices should escalate to 48px (Material spec).
 
 ```css
 .button { min-height: 2rem; }

@@ -105,11 +105,11 @@ Three beliefs that govern every rule in this system:
 | Custom ease-in-out | `cubic-bezier(0.77, 0, 0.175, 1)` | easing-custom-curves |
 | Stagger cap | ≤60ms/item (1-5), ≤40ms (6+) | timing-stagger-adaptive |
 | Total stagger limit | **400ms** | timing-stagger-adaptive |
-| Interactive target size | **32px** minimum | a11y-target-size-32 |
+| Interactive target size | **24px** floor (WCAG 2.2 AA) · 44–48px touch | a11y-target-size-24 |
 | Keyboard animation | **0ms** (none) | Decision Framework, Step 1 |
 | Exit/entrance ratio | **~60%** (exit is faster) | exit-timing-asymmetric |
 | Max blur | **20px** | perf-blur-limit |
-| Doherty threshold | **400ms** response time | ux-doherty-under-400ms |
+| Response thresholds | 100ms feedback · **200ms** INP · 1s/10s indicators | ux-doherty-response-thresholds |
 
 ---
 

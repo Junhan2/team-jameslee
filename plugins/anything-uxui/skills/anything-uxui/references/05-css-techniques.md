@@ -562,7 +562,7 @@ Use `::first-line` instead of JS or hardcoded spans for first-line styling.
 
 ### css-scroll-timeline — CSS-only scroll-linked animations
 
-`animation-timeline: scroll()` and `view()` enable scroll-linked animations without JavaScript — off-main-thread, GPU-accelerated.
+`animation-timeline: scroll()` and `view()` enable scroll-linked animations without JavaScript — off-main-thread, GPU-accelerated. **Support (2026): Chrome 115+, Safari 26+; Firefox still behind a flag (Fx 152, Jun 2026) — not yet cross-browser.** Safe for decoration (Firefox users see the end state via `animation-fill-mode: both`); for progress-critical UI, gate with `@supports (animation-timeline: scroll())` and provide an IntersectionObserver fallback.
 
 ```css
 /* ❌ JS-based scroll tracking */

@@ -14,16 +14,16 @@ tags: ux-psychology, fitts, hick, miller, gestalt, cognitive-load
 
 ## 1. Fitts's Law — Size and Distance
 
-### `ux-fitts-target-size` — Interactive targets minimum 32px
+### `ux-fitts-target-size` — Targets: 24px floor, 44–48px on touch
 
-Larger targets are easier to click. Interactive elements must be at least 32px.
+Larger targets are easier to acquire (Fitts's Law). WCAG 2.2 SC 2.5.8 (AA) sets a **24px** minimum; design default **44px**, **48px** on touch. (→ `a11y-target-size-24`)
 
 ```css
-/* ❌ Small click target */
+/* ❌ Below the WCAG 2.2 floor */
 .icon-button { width: 16px; height: 16px; padding: 0; }
 
-/* ✅ Comfortable target */
-.icon-button { width: 32px; height: 32px; padding: 8px; }
+/* ✅ 24px floor, 44px comfortable */
+.icon-button { min-width: 44px; min-height: 44px; padding: 8px; }
 ```
 
 **When to apply**: All interactive elements (buttons, links, checkboxes, toggles).
@@ -89,9 +89,18 @@ Working memory holds roughly 7 (+-2) items. Break large datasets into groups to 
 
 ## 4. Doherty Threshold — Response Time
 
-### `ux-doherty-under-400ms` — Respond within 400ms
+### `ux-doherty-response-thresholds` — Layered response thresholds (not one number)
 
-Interactions must respond within 400ms to feel "instant." Beyond that, users perceive delay and lose immersion.
+Different delays cross different perceptual limits — cite the layer that fits, not a single figure:
+
+| Budget | Limit | Do |
+|--------|-------|-----|
+| **~100ms** | Perceived as instant / causal (Nielsen 0.1s) | Give feedback within 100ms |
+| **≤200ms** | INP "good" ceiling (p75) — the 2026 industry target | Keep interaction→next-paint under 200ms |
+| **~1s** | Flow-break limit | Show a persistent indicator only past ~1s |
+| **~10s** | Attention limit | Progress bar + explicit time estimate |
+
+Doherty's 400ms (1982) now survives only as a "productivity/flow" citation, not a responsiveness target — optimize INP instead (→ `12-performance`).
 
 ```tsx
 // ❌ No feedback during loading

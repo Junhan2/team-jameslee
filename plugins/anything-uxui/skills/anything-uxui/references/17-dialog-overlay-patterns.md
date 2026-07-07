@@ -253,7 +253,7 @@ CSS Anchor Positioning replaces Floating UI (~8KB) for tooltip/popover positioni
 
 The `margin: unset` is critical — default margins on positioned elements cause offset issues.
 
-**When to apply**: Tooltips, dropdown menus, popovers — any element positioned relative to a trigger. Check browser support and use Floating UI as fallback for older browsers if needed.
+**When to apply**: Tooltips, dropdown menus, popovers — any element positioned relative to a trigger. **Baseline across all engines as of 2026** (Chrome 125+, Safari 26+, Firefox 147+; ~91% of traffic). Default to native; gate with `@supports (anchor-name: --a)` and fall back to Floating UI only for legacy support matrices — the inverse of the old "JS-first, native-if-supported" posture.
 
 ---
 

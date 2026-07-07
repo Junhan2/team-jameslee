@@ -1,7 +1,7 @@
 ---
 title: Spring Animation Physics
 impact: HIGH
-tags: spring, physics, gesture, framer-motion, interruptible
+tags: spring, physics, gesture, motion, interruptible
 ---
 
 # Spring Animation Physics
@@ -78,7 +78,7 @@ transition={{ type: "spring", stiffness: 500, damping: 30 }}
 Linking visual changes directly to mouse position feels artificial — no motion quality. Use `useSpring` to interpolate values with spring-like behavior.
 
 ```jsx
-import { useSpring } from 'framer-motion';
+import { useSpring } from 'motion/react';
 
 // ❌ Without spring: artificial, instant
 const rotation = mouseX * 0.1;

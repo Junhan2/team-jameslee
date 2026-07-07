@@ -182,8 +182,9 @@ useEffect(() => {
 ```
 
 ### When to apply
-- Use `@starting-style` when browser support allows
-- Fall back to the `data-mounted` attribute pattern when unsupported
+- `@starting-style` is Baseline (Chrome 117 / Safari 17.5 / Firefox 129, since Aug 2024) — use it by default, no hedge needed
+- Pair with `transition-behavior: allow-discrete` to also animate the *exit* (`display: none`) with pure CSS — no AnimatePresence needed for leaf overlays (→ `07-exit-animations`)
+- Fall back to the `data-mounted` attribute pattern only for legacy support matrices
 - Suited for entry animations on elements newly added to the DOM
 
 ---
