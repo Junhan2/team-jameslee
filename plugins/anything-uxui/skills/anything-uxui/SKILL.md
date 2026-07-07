@@ -54,15 +54,16 @@ Three beliefs that govern every rule in this system:
 | 06 | [Gesture Interaction](references/06-gesture-interaction.md) | HIGH | 8 | Momentum, damping, pointer capture, directional friction |
 | 07 | [Exit Animations](references/07-exit-animations.md) | HIGH | 14 | AnimatePresence, exit symmetry, modes, propagation |
 
-### Visual & Design Systems (08–10, 18–19)
+### Visual & Design Systems (08–10, 18–19, 23)
 
 | # | Category | Impact | Rules | Reference |
 |---|----------|--------|-------|-----------|
 | 08 | [Visual Design](references/08-visual-design.md) | HIGH | 10 | Shadows, radius, spacing, button anatomy |
 | 09 | [Typography](references/09-typography.md) | MEDIUM | 16 | Numeric format, OpenType, rendering, layout |
 | 10 | [Audio Feedback](references/10-audio-feedback.md) | MEDIUM | 30 | Sound design, Web Audio API, appropriateness |
-| 18 | [Color & Theming](references/18-color-theming.md) | CRITICAL | 10 | OKLCH, semantic colors, dark mode, surface hierarchy |
+| 18 | [Color & Theming](references/18-color-theming.md) | CRITICAL | 12 | OKLCH, semantic colors, dark mode, contrast, light-dark() |
 | 19 | [Design Tokens](references/19-design-tokens.md) | HIGH | 6 | CSS variable architecture, shadow palette, token schema |
+| 23 | [Distinctive Design](references/23-distinctive-design.md) | CRITICAL | 9 | Anti-AI-slop: font/palette/scaffold/glassmorphism tells |
 
 ### Layout & Structure (16–17, 21)
 
@@ -81,9 +82,16 @@ Three beliefs that govern every rule in this system:
 | 13 | [Prefetching](references/13-prefetching.md) | MEDIUM | 6 | Trajectory prediction, hitSlop, touch fallback |
 | 14 | [Accessibility](references/14-accessibility.md) | HIGH | 8 | Reduced motion, rem units, focus-visible, target sizes |
 | 15 | [Review Methodology & Checklist](references/15-review-checklist.md) | HIGH | — | Reviewer posture, 10 non-negotiable standards, escalation triggers, remedial hierarchy, Block/Approve verdict, checklist, debug |
-| 20 | [Keyboard & State Matrix](references/20-keyboard-state-matrix.md) | CRITICAL | 10 | Roving tabindex, focus-visible, 7-state matrix, ARIA |
+| 20 | [Keyboard & State Matrix](references/20-keyboard-state-matrix.md) | CRITICAL | 10 | Roving tabindex, focus-visible, SPA route focus, skip link, ARIA |
 
-**Total: 248 rules across 21 categories**
+### State & AI Interfaces (24–25)
+
+| # | Category | Impact | Rules | Reference |
+|---|----------|--------|-------|-----------|
+| 24 | [State Design](references/24-state-design.md) | HIGH | 7 | Loading/empty/error/pending, skeleton vs spinner, optimistic limits |
+| 25 | [AI & Streaming](references/25-ai-streaming.md) | HIGH | 7 | Streaming a11y, stop control, reasoning traces, provisional content |
+
+**Total: ~290 rules across 24 categories**
 
 ### Appendix (reference — not counted as rules)
 
