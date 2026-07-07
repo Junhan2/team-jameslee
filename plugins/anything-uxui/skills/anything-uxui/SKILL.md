@@ -1,11 +1,13 @@
 ---
 name: anything-uxui
 description: |
-  Comprehensive UIUX design principles and standards for web interfaces.
-  Use this skill when building, reviewing, or improving any web UI — components,
-  pages, layouts, animations, interactions, visual design, typography, color systems,
-  forms, dialogs, keyboard navigation, audio feedback, or accessibility.
-  Covers 21 categories with 240+ actionable rules.
+  Comprehensive UI/UX design-engineering standards for web interfaces — and a
+  diagnose→fix harness for broken UI, especially React components.
+  Use this skill when building, reviewing, or fixing any web UI: animations,
+  interactions, state handling (loading/empty/error/pending), visual design,
+  typography, color systems, forms, dialogs, keyboard navigation, audio feedback,
+  or accessibility — or when the output looks generic/AI-made.
+  Covers 24 categories / ~290 actionable rules + a symptom→rule diagnosis map.
 
   Also trigger when: setting up design tokens, implementing dark mode, creating
   design system foundations, building responsive layouts, or auditing accessibility.
@@ -20,7 +22,7 @@ license: MIT
 metadata:
   author: junhan
   organization: select.codes
-  version: "2.0.0"
+  version: "3.0.0"
 ---
 
 # anything-uxui — Web Interface Design Standards
@@ -147,6 +149,16 @@ Three beliefs that govern every rule in this system:
 ---
 
 ## How to Use This Skill
+
+**Start at [00-Diagnosis Map](references/00-diagnosis-map.md)** — symptom → rule → fix. Three workflows:
+- **Audit** existing code/diff → findings table + Block/Approve verdict (methodology: [15](references/15-review-checklist.md))
+- **Fix** → apply the remedial hierarchy (delete > reduce > … > polish) from the map
+- **Design new** → load [23-distinctive-design](references/23-distinctive-design.md) + tokens first, so output isn't slop by construction
+
+### When fixing broken UI (audit → fix):
+1. [00-Diagnosis Map](references/00-diagnosis-map.md) — match the symptom, get the rule-ids
+2. Apply the fix; verify with [15-Review Methodology](references/15-review-checklist.md) → Block/Approve
+3. For React components, use the before→after transforms in `recipes/`
 
 ### When building a new component:
 1. Start with [01-Philosophy](references/01-philosophy.md) — "Does this need animation?"
