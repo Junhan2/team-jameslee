@@ -448,6 +448,8 @@ function openLightbox(img: HTMLImageElement) {
 
 **When to apply**: Page or view transitions requiring shared element continuity. Saves bundle size and delivers native performance over JS libraries.
 
+**In React**, do NOT call `document.startViewTransition(() => setState())` directly — React flushes state asynchronously, so the snapshot is wrong. Either wrap the update in `flushSync` (stable, but it blocks the main thread): `startViewTransition(() => flushSync(() => setState()))`; or use React's own `<ViewTransition>` component + `addTransitionType` (Canary as of July 2026 — it owns the `startViewTransition` call internally, so never call it manually alongside). Always gate with `@media (prefers-reduced-motion: reduce)` to skip the transition.
+
 ---
 
 ### css-view-transition-pseudo-styling -- Style view transition pseudo-elements

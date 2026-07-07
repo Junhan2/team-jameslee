@@ -85,6 +85,46 @@ Motion's shorthand transforms (`x`, `y`, `scale`) animate CSS variables that are
 
 Treat this as **progressive enhancement, not an absolute**: the shorthand path is fine for most cases and is *required* when composing with `layout`/drag (which need Motion's transform composition). Reach for the full-transform form only on animations that must stay smooth while the page is busy loading/scripting/painting. (See also `perf-motion-values-no-rerender`.)
 
+### perf-motion-values-no-rerender — Never drive per-frame values through React state
+
+The #1 Motion-in-React performance mistake: updating `useState` on every `pointermove`/`scroll` and feeding it to `animate`/`style` — this re-renders the whole component every frame.
+
+```tsx
+// ❌ setState per frame → full React re-render each frame
+const [x, setX] = useState(0);
+// onPointerMove={(e) => setX(e.clientX)} ... <motion.div style={{ x }} />
+
+// ✅ MotionValue updates OUTSIDE React's render cycle — zero re-renders
+const x = useMotionValue(0);
+const springX = useSpring(x, { stiffness: 300, damping: 30 });
+// onPointerMove={(e) => x.set(e.clientX)} ... <motion.div style={{ x: springX }} />
+```
+
+`useMotionValue`/`useTransform`/`useSpring` animate values off the React render cycle. **React Compiler does NOT fix this** — memoization cannot remove a setState-per-frame render loop.
+
+**When to apply**: Any value driven by pointer, scroll, or rapid events (drag position, parallax, cursor-follow, live progress).
+
+### perf-motion-bundle — Load only the Motion features you use
+
+The full `motion` component is ~34kb. Use `LazyMotion` + the `m` component to ship ~4.6kb initial, loading feature packs on demand.
+
+```tsx
+import { LazyMotion, domAnimation, m } from "motion/react";
+// domAnimation +15kb · domMax (drag/layout) +25kb · `strict` throws on a stray `motion`
+<LazyMotion features={domAnimation} strict>
+  <m.div animate={{ opacity: 1 }} />   {/* use `m`, not `motion` */}
+</LazyMotion>
+```
+
+For non-React micro-interactions, vanilla `animate()` from `motion/mini` (WAAPI-only) is ~2.6kb. A full `motion` import in a leaf that only fades is a finding.
+
+### perf-motion-compiler-note — React Compiler 1.0 and animation code
+
+React Compiler (stable since Oct 2025) auto-memoizes. Implications:
+- Don't hand-write `useMemo`/`useCallback` for variants/transition objects in a compiled project — it's noise (flag it in review).
+- Memoization does NOT eliminate per-frame `setState` re-renders — MotionValues stay mandatory (`perf-motion-values-no-rerender`).
+- The compiler silently bails on Rules-of-React violations — mutating refs during render (a classic imperative-animation hack) de-opts the whole component. Keep imperative animation in effects, event handlers, or motion values.
+
 ---
 
 ## CSS vs JS Animation

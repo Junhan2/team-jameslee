@@ -122,6 +122,18 @@ Dynamic lists inside AnimatePresence need stable keys (not array index) for corr
 {items.map((item) => <motion.div key={item.id} exit={{ opacity: 0 }} />)}
 ```
 
+### exit-no-fragment-children — Direct children must be keyed motion elements
+
+Wrapping siblings in a Fragment (`<>…</>`) inside AnimatePresence silently kills ALL exit animations — no warning. The immediate children must be keyed motion elements. A nested/grandchild motion element also loses exit unless you pass `propagate`; and `mode="popLayout"` requires custom-component children to forward refs.
+
+```tsx
+// ❌ Fragment swallows exit — nothing animates out
+<AnimatePresence><>{a}{b}</></AnimatePresence>
+
+// ✅ Keyed motion element as a direct child
+<AnimatePresence>{show && <motion.div key="x" exit={{ opacity: 0 }} />}</AnimatePresence>
+```
+
 ### exit-disable-interactions — Disable interactions during exit
 
 Exiting elements should not respond to clicks or hover.

@@ -288,3 +288,13 @@ For global UI components (toasts, notifications), use the Observer pattern inste
 ### component-tab-visibility-pause — Pause timers when tab is hidden
 
 Use `document.visibilitychange` to pause auto-dismiss timers (toasts, notifications) when the browser tab is hidden. Resume on tab reactivation. Applies to all time-based UI.
+
+### component-activity-preserve — Keep offscreen state alive with `<Activity>` (React 19.2)
+
+`<Activity mode="visible|hidden">` (stable since React 19.2) preserves a subtree's state and DOM while hidden (`display: none`) and pre-renders hidden content at lower priority — effects unmount while hidden. Use it for tab panels, wizard steps, and offscreen routes instead of unmount/remount, which loses scroll, form, and animation state. Pairs with `component-tab-visibility-pause`.
+
+```tsx
+<Activity mode={tab === 'profile' ? 'visible' : 'hidden'}>
+  <ProfilePanel />   {/* keeps scroll + form state when the tab is switched away */}
+</Activity>
+```
